@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../navigation/Navbar'
 import { TextRollButton } from '../ui/TextRollButton'
 import { AIVerifiedIcon } from '../icons/AIVerifiedIcon'
 
 export function HeroSection() {
   const [badgeHovered, setBadgeHovered] = useState(false)
+  const navigate = useNavigate()
 
   return (
     <>
@@ -254,6 +256,7 @@ export function HeroSection() {
                 paddingLeft={20}
                 paddingRight={8}
                 fontSize={13}
+                onClick={() => navigate('/dashboard')}
               />
             </div>
 

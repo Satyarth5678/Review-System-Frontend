@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { TextRollButton } from '../ui/TextRollButton'
 import { ShieldAlert, FileEdit, BookOpen, AlertTriangle, CheckCircle, ChevronRight } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
@@ -222,6 +223,7 @@ function FeatureCard({
 
 export function AboutSection() {
   const width = useWindowWidth()
+  const navigate = useNavigate()
   const isMd = width >= 768
   const isLg = width >= 1024
 
@@ -276,6 +278,7 @@ export function AboutSection() {
                 paddingLeft={20}
                 paddingRight={8}
                 fontSize={13}
+                onClick={() => navigate('/dashboard')}
               />
             </div>
           </div>

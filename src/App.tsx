@@ -1,10 +1,12 @@
 import './index.css'
 import { Component, type ReactNode } from 'react'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { HeroSection } from './components/landing/HeroSection'
 import { AboutSection } from './components/landing/AboutSection'
 import { CaseStudiesSection } from './components/landing/CaseStudiesSection'
 import { Footer } from './components/landing/Footer'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
+import { DashboardPage } from './pages/DashboardPage'
 
 class SectionBoundary extends Component<{ name: string; children: ReactNode }, { error: string | null }> {
   state = { error: null }
@@ -36,7 +38,14 @@ function LandingPage() {
 }
 
 function App() {
-  return <LandingPage />
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
 export default App

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Clock, Menu, X } from 'lucide-react'
 import { MobileMenu } from './MobileMenu'
 import { TextRollButton } from '../ui/TextRollButton'
@@ -9,6 +10,7 @@ const NAV_LINKS = ['Features', 'Workflow', 'Security', 'Contact']
 
 export function Navbar() {
   const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
   const time = useLondonTime()
   const width = useWindowWidth()
   const isMd = width >= 768
@@ -68,6 +70,7 @@ export function Navbar() {
                   paddingLeft={20}
                   paddingRight={8}
                   fontSize={13}
+                  onClick={() => navigate('/dashboard')}
                 />
               </div>
             )}

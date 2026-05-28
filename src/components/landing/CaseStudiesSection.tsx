@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
@@ -58,27 +58,23 @@ function RiskDetectionCard() {
 }
 
 function RedliningCard() {
-  const stepRef = useRef(0)
-  const typingRef = useRef(0)
-  const [, forceUpdate] = useState(0)
+  const [animation, setAnimation] = useState({ step: 0, typing: 0 })
 
   useEffect(() => {
     const typingId = setInterval(() => {
-      const max = REDLINES[stepRef.current % REDLINES.length].redline.length
-      if (typingRef.current < max) {
-        typingRef.current = Math.min(typingRef.current + 3, max)
-        forceUpdate(n => n + 1)
-      }
+      setAnimation(current => {
+        const max = REDLINES[current.step % REDLINES.length].redline.length
+        if (current.typing >= max) return current
+        return { ...current, typing: Math.min(current.typing + 3, max) }
+      })
     }, 40)
     const stepId = setInterval(() => {
-      stepRef.current = stepRef.current + 1
-      typingRef.current = 0
-      forceUpdate(n => n + 1)
+      setAnimation(current => ({ step: current.step + 1, typing: 0 }))
     }, 3500)
     return () => { clearInterval(typingId); clearInterval(stepId) }
   }, [])
 
-  const idx = stepRef.current % REDLINES.length
+  const idx = animation.step % REDLINES.length
   const current = REDLINES[idx]
 
   return (
@@ -90,7 +86,7 @@ function RedliningCard() {
       <div style={{ padding: '12px 14px', borderRadius: 10, backgroundColor: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
         <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 600, letterSpacing: '0.06em', marginBottom: 6 }}>SUGGESTED REDLINE</div>
         <p style={{ fontSize: 13, color: '#fff', lineHeight: 1.5, margin: 0 }}>
-          {current.redline.slice(0, typingRef.current)}
+          {current.redline.slice(0, animation.typing)}
           <span style={{ display: 'inline-block', width: 2, height: 13, backgroundColor: '#F26522', marginLeft: 1, verticalAlign: 'middle' }} />
         </p>
       </div>
@@ -110,51 +106,35 @@ const CLAUSE_STAGES = [
 ]
 
 function PDFExportCard() {
-  const stageRef = useRef(0)   // 0-4
-  const clauseRef = useRef(0)  // which clause pair
-  const typingRef = useRef(0)  // chars typed
-  const [, setTick] = useState(0)
+  const [animation, setAnimation] = useState({ stage: 0, clause: 0, typing: 0, hold: 0 })
 
   useEffect(() => {
     const id = setInterval(() => {
-      const stage = stageRef.current
-      const clause = CLAUSE_STAGES[clauseRef.current % CLAUSE_STAGES.length]
-
-      if (stage === 1) {
-        // typing the rewritten clause
-        const max = clause.rewritten.length
-        if (typingRef.current < max) {
-          typingRef.current = Math.min(typingRef.current + 4, max)
-        } else {
-          stageRef.current = 2
+      setAnimation(current => {
+        const clause = CLAUSE_STAGES[current.clause % CLAUSE_STAGES.length]
+        if (current.stage === 0) return { ...current, stage: 1 }
+        if (current.stage === 1) {
+          const max = clause.rewritten.length
+          if (current.typing < max) {
+            return { ...current, typing: Math.min(current.typing + 4, max) }
+          }
+          return { ...current, stage: 2 }
         }
-      } else if (stage === 2) {
-        // pause on rewritten, then move to PDF generation
-        stageRef.current = 3
-      } else if (stage === 3) {
-        // show generating PDF, then ready
-        stageRef.current = 4
-      } else if (stage === 4) {
-        // reset to next clause
-        setTimeout(() => {
-          clauseRef.current += 1
-          typingRef.current = 0
-          stageRef.current = 0
-          setTick(n => n + 1)
-        }, 2000)
-        stageRef.current = 99 // hold
-      } else if (stage === 0) {
-        // pause on original, then start rewriting
-        stageRef.current = 1
-      }
-      setTick(n => n + 1)
-    }, 60)
+        if (current.stage === 2) return { ...current, stage: 3 }
+        if (current.stage === 3) return { ...current, stage: 4 }
+        if (current.stage === 4) {
+          if (current.hold < 18) return { ...current, hold: current.hold + 1 }
+          return { stage: 0, clause: current.clause + 1, typing: 0, hold: 0 }
+        }
+        return current
+      })
+    }, 120)
     return () => clearInterval(id)
   }, [])
 
-  const stage = stageRef.current
-  const clause = CLAUSE_STAGES[clauseRef.current % CLAUSE_STAGES.length]
-  const typed = clause.rewritten.slice(0, typingRef.current)
+  const stage = animation.stage
+  const clause = CLAUSE_STAGES[animation.clause % CLAUSE_STAGES.length]
+  const typed = clause.rewritten.slice(0, animation.typing)
   const progress = stage >= 3 ? (stage === 3 ? 60 : 100) : 0
 
   return (

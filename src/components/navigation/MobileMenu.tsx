@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { TextRollButton } from '../ui/TextRollButton'
 import { useLondonTime } from '../../hooks/useLondonTime'
@@ -12,6 +13,7 @@ interface Props {
 
 export function MobileMenu({ isOpen, onClose }: Props) {
   const time = useLondonTime()
+  const navigate = useNavigate()
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
@@ -107,6 +109,10 @@ export function MobileMenu({ isOpen, onClose }: Props) {
             paddingRight={8}
             fontSize={14}
             fullWidth
+            onClick={() => {
+              onClose()
+              navigate('/dashboard')
+            }}
           />
         </div>
       </div>

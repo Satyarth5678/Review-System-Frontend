@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { TextRollButton } from '../ui/TextRollButton'
 import { ShieldAlert, FileEdit, BookOpen, AlertTriangle, CheckCircle, ChevronRight } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
@@ -224,6 +225,7 @@ export function AboutSection() {
   const width = useWindowWidth()
   const isMd = width >= 768
   const isLg = width >= 1024
+  const navigate = useNavigate()
 
   return (
     <section
@@ -276,6 +278,7 @@ export function AboutSection() {
                 paddingLeft={20}
                 paddingRight={8}
                 fontSize={13}
+                onClick={() => navigate('/explore-platform')}
               />
             </div>
           </div>

@@ -14,7 +14,7 @@ const GRAY = '#6b7280'
 const LIGHT = '#f9fafb'
 const ease = 'cubic-bezier(0.25,0.1,0.25,1)'
 
-/* ── Intersection-observer fade-in hook ── */
+/* ── Intersection-observer fade-in hook — re-triggers on every scroll into view ── */
 function useReveal(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
@@ -22,7 +22,7 @@ function useReveal(threshold = 0.15) {
     const el = ref.current
     if (!el) return
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      ([e]) => { setVisible(e.isIntersecting) },
       { threshold }
     )
     obs.observe(el)
@@ -31,12 +31,12 @@ function useReveal(threshold = 0.15) {
   return { ref, visible }
 }
 
-/* ── Animated counter ── */
+/* ── Animated counter — resets and replays every time it scrolls into view ── */
 function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   const [val, setVal] = useState(0)
   const { ref, visible } = useReveal(0.3)
   useEffect(() => {
-    if (!visible) return
+    if (!visible) { setVal(0); return }
     let start = 0
     const step = Math.ceil(to / 60)
     const id = setInterval(() => {
@@ -78,15 +78,91 @@ function HeroExplore() {
       position: 'relative', minHeight: '92vh',
       display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
       textAlign: 'center', overflow: 'hidden',
-      background: 'linear-gradient(135deg,#fff8f4 0%,#ffffff 45%,#f0f4ff 100%)',
+      backgroundColor: '#EFEFEF',
       padding: 'clamp(80px,10vw,140px) clamp(20px,4vw,48px) clamp(60px,8vw,100px)',
     }}>
-      {/* Decorative orbs */}
-      <div aria-hidden="true" style={{ position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden' }}>
-        <div style={{ position:'absolute',width:'60vw',height:'60vw',top:'-20vw',right:'-15vw',borderRadius:'50%',
-          background:'radial-gradient(circle,rgba(242,101,34,0.12) 0%,transparent 70%)',filter:'blur(40px)' }} />
-        <div style={{ position:'absolute',width:'50vw',height:'50vw',bottom:'-15vw',left:'-10vw',borderRadius:'50%',
-          background:'radial-gradient(circle,rgba(99,102,241,0.08) 0%,transparent 70%)',filter:'blur(40px)' }} />
+      <style>{`
+        @keyframes exploreOrb1 {
+          0%   { transform: translate(0%,0%) scale(1); }
+          25%  { transform: translate(12%,-18%) scale(1.25); }
+          50%  { transform: translate(-8%,12%) scale(0.85); }
+          75%  { transform: translate(15%,8%) scale(1.15); }
+          100% { transform: translate(0%,0%) scale(1); }
+        }
+        @keyframes exploreOrb2 {
+          0%   { transform: translate(0%,0%) scale(1); }
+          33%  { transform: translate(-15%,15%) scale(1.3); }
+          66%  { transform: translate(12%,-12%) scale(0.8); }
+          100% { transform: translate(0%,0%) scale(1); }
+        }
+        @keyframes exploreOrb3 {
+          0%   { transform: translate(0%,0%) scale(1); }
+          40%  { transform: translate(8%,20%) scale(1.35); }
+          80%  { transform: translate(-12%,-8%) scale(0.82); }
+          100% { transform: translate(0%,0%) scale(1); }
+        }
+        @keyframes exploreOrb4 {
+          0%   { transform: translate(0%,0%) scale(1); }
+          50%  { transform: translate(-18%,-15%) scale(1.2); }
+          100% { transform: translate(0%,0%) scale(1); }
+        }
+        @keyframes exploreOrb5 {
+          0%   { transform: translate(0%,0%) scale(1); }
+          30%  { transform: translate(20%,-10%) scale(1.4); }
+          70%  { transform: translate(-10%,18%) scale(0.75); }
+          100% { transform: translate(0%,0%) scale(1); }
+        }
+        @keyframes exploreRedLine {
+          0%   { top: -10%; opacity: 0; }
+          15%  { opacity: 1; }
+          85%  { opacity: 1; }
+          100% { top: 110%; opacity: 0; }
+        }
+      `}</style>
+
+      {/* Animated mesh gradient — same as landing page hero */}
+      <div aria-hidden="true" style={{ position:'absolute',inset:0,zIndex:1,pointerEvents:'none',overflow:'hidden' }}>
+        {/* Orb 1 — dominant orange, top-right */}
+        <div style={{
+          position:'absolute', width:'80vw', height:'80vw', top:'-30vw', right:'-25vw',
+          borderRadius:'50%',
+          background:'radial-gradient(circle at 40% 40%,rgba(242,101,34,0.55) 0%,rgba(242,101,34,0.25) 35%,rgba(251,146,60,0.08) 60%,transparent 75%)',
+          animation:'exploreOrb1 16s ease-in-out infinite', filter:'blur(20px)',
+        }} />
+        {/* Orb 2 — warm peach, left-center */}
+        <div style={{
+          position:'absolute', width:'65vw', height:'65vw', top:'5%', left:'-20vw',
+          borderRadius:'50%',
+          background:'radial-gradient(circle at 60% 50%,rgba(251,146,60,0.40) 0%,rgba(251,146,60,0.15) 40%,transparent 70%)',
+          animation:'exploreOrb2 20s ease-in-out infinite', filter:'blur(24px)',
+        }} />
+        {/* Orb 3 — bright cream center glow */}
+        <div style={{
+          position:'absolute', width:'70vw', height:'70vw', top:'15%', left:'15%',
+          borderRadius:'50%',
+          background:'radial-gradient(circle at 50% 50%,rgba(255,255,255,0.90) 0%,rgba(255,235,210,0.50) 35%,rgba(255,200,150,0.15) 60%,transparent 75%)',
+          animation:'exploreOrb3 24s ease-in-out infinite', filter:'blur(16px)',
+        }} />
+        {/* Orb 4 — deep orange, bottom-left */}
+        <div style={{
+          position:'absolute', width:'55vw', height:'55vw', bottom:'-15vw', left:'-10vw',
+          borderRadius:'50%',
+          background:'radial-gradient(circle at 50% 50%,rgba(234,88,12,0.35) 0%,rgba(234,88,12,0.12) 45%,transparent 70%)',
+          animation:'exploreOrb4 18s ease-in-out infinite', filter:'blur(28px)',
+        }} />
+        {/* Orb 5 — accent orange, bottom-right */}
+        <div style={{
+          position:'absolute', width:'50vw', height:'50vw', bottom:'-10vw', right:'-10vw',
+          borderRadius:'50%',
+          background:'radial-gradient(circle at 50% 50%,rgba(249,115,22,0.30) 0%,rgba(249,115,22,0.10) 45%,transparent 70%)',
+          animation:'exploreOrb5 22s ease-in-out infinite', filter:'blur(22px)',
+        }} />
+        {/* Slow-moving vertical red line */}
+        <div style={{
+          position:'absolute', left:'50%', width:1.5, height:'35%',
+          background:'linear-gradient(to bottom,transparent 0%,rgba(220,38,38,0.55) 30%,rgba(220,38,38,0.75) 50%,rgba(220,38,38,0.55) 70%,transparent 100%)',
+          animation:'exploreRedLine 6s ease-in-out infinite', filter:'blur(0.5px)',
+        }} />
       </div>
 
       <div style={{ position:'relative', zIndex:2, maxWidth:860 }}>
@@ -138,12 +214,6 @@ function HeroExplore() {
             Tech Stack
           </a>
         </div>
-      </div>
-
-      {/* Scroll cue */}
-      <div style={{ position:'absolute', bottom:32, left:'50%', transform:'translateX(-50%)', display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity:0.4 }}>
-        <span style={{ fontSize:11, color:DARK, letterSpacing:'0.08em', textTransform:'uppercase' }}>Scroll</span>
-        <div style={{ width:1, height:32, background:`linear-gradient(to bottom,${DARK},transparent)` }} />
       </div>
     </section>
   )
@@ -644,78 +714,193 @@ const ARCH_NODES = [
 
 function ArchSection() {
   const { ref, visible } = useReveal(0.1)
-  const [hoveredNode, setHoveredNode] = useState<number|null>(null)
+  const [hoveredNode, setHoveredNode] = useState<number | null>(null)
+  const [glowNode, setGlowNode] = useState(0)
+  const glowTimer = useRef<ReturnType<typeof setInterval> | null>(null)
+  // waveOffset drives the SVG wave translateX — moves one node-width per step
+  const [waveOffset, setWaveOffset] = useState(0)
+  const STEP_MS = 1400
+  const N = ARCH_NODES.length
+
+  useEffect(() => {
+    if (visible) {
+      // reset both on entry
+      setGlowNode(0)
+      setWaveOffset(0)
+      glowTimer.current = setInterval(() => {
+        setGlowNode(n => (n + 1) % N)
+        setWaveOffset(o => o + 1)          // keeps incrementing; CSS uses modulo via translateX
+      }, STEP_MS)
+    } else {
+      if (glowTimer.current) clearInterval(glowTimer.current)
+      setGlowNode(0)
+      setWaveOffset(0)
+    }
+    return () => { if (glowTimer.current) clearInterval(glowTimer.current) }
+  }, [visible, N])
+
+  // Each node occupies (100 / N)% of the chain width
+  const nodeWidthPct = 100 / N
+  // Wave translateX: move one node-width per step, wrapping at 100%
+  const waveTx = `${(waveOffset % N) * nodeWidthPct}%`
 
   return (
     <section ref={ref} style={{
-      backgroundColor:'#f9fafb', padding:'clamp(64px,8vw,120px) clamp(20px,4vw,48px)', overflow:'hidden',
+      backgroundColor: '#f9fafb', padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)', overflow: 'hidden',
     }}>
-      <div style={{ maxWidth:1280, margin:'0 auto' }}>
+      <style>{`
+        @keyframes archWaveGlow {
+          0%, 100% { opacity: 0.55; }
+          50%       { opacity: 1; }
+        }
+      `}</style>
+
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        {/* Header */}
         <div style={{
-          marginBottom:'clamp(40px,5vw,64px)',
-          opacity: visible?1:0, transform: visible?'translateY(0)':'translateY(24px)',
-          transition:`opacity 600ms ${ease}, transform 600ms ${ease}`,
+          marginBottom: 'clamp(40px,5vw,64px)',
+          opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(24px)',
+          transition: `opacity 600ms ${ease}, transform 600ms ${ease}`,
         }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-            <div style={{ width:26,height:26,borderRadius:'50%',backgroundColor:DARK,display:'flex',alignItems:'center',justifyContent:'center' }}>
-              <span style={{ color:'#fff',fontSize:11,fontWeight:600 }}>5</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: '#fff', fontSize: 11, fontWeight: 600 }}>5</span>
             </div>
             <Pill label="Architecture" />
           </div>
-          <h2 style={{ fontSize:'clamp(1.5rem,3.5vw,2.8rem)',fontWeight:500,letterSpacing:'-0.02em',color:DARK,margin:'0 0 12px' }}>
+          <h2 style={{ fontSize: 'clamp(1.5rem,3.5vw,2.8rem)', fontWeight: 500, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px' }}>
             Request flow architecture
           </h2>
-          <p style={{ fontSize:15,color:GRAY,lineHeight:1.6,maxWidth:520,margin:0 }}>
-            Hover each node to inspect its role in the pipeline.
+          <p style={{ fontSize: 15, color: GRAY, lineHeight: 1.6, maxWidth: 520, margin: 0 }}>
+            Watch the signal travel through each layer of the pipeline.
           </p>
         </div>
 
-        {/* Scrollable node chain */}
-        <div style={{ overflowX:'auto', paddingBottom:16 }}>
+        {/* ── Wave + node chain wrapper ── */}
+        <div style={{ overflowX: 'hidden', overflowY: 'visible', padding: '8px 4px 24px' }}>
           <div style={{
-            display:'flex', alignItems:'center', gap:0,
-            minWidth: ARCH_NODES.length * 140,
-            opacity: visible?1:0, transition:`opacity 700ms ${ease} 200ms`,
+            position: 'relative',
+            minWidth: N * 140,
+            opacity: visible ? 1 : 0, transition: `opacity 700ms ${ease} 200ms`,
           }}>
-            {ARCH_NODES.map((node, i) => (
-              <div key={i} style={{ display:'flex', alignItems:'center', flex:1 }}>
-                <div
-                  onMouseEnter={() => setHoveredNode(i)}
-                  onMouseLeave={() => setHoveredNode(null)}
-                  style={{
-                    display:'flex', flexDirection:'column', alignItems:'center', gap:6,
-                    padding:'16px 12px', borderRadius:14, cursor:'default',
-                    backgroundColor: hoveredNode===i ? '#ffffff' : 'transparent',
-                    boxShadow: hoveredNode===i ? '0 8px 24px rgba(0,0,0,0.08)' : 'none',
-                    transition:`all 300ms ${ease}`, flex:1,
-                  }}
-                >
-                  <div style={{
-                    width:48, height:48, borderRadius:14,
-                    backgroundColor: hoveredNode===i ? node.color : `${node.color}20`,
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    transition:`background-color 300ms ${ease}`,
-                  }}>
-                    <div style={{ width:16,height:16,borderRadius:'50%',backgroundColor: hoveredNode===i ? '#fff' : node.color }} />
+
+            {/* ── SVG wave ribbon — sits above the nodes ── */}
+            <div style={{
+              position: 'relative', width: '100%', height: 48,
+              marginBottom: 8, overflow: 'visible',
+            }}>
+              <svg
+                viewBox="0 0 800 48"
+                preserveAspectRatio="none"
+                style={{
+                  position: 'absolute', top: 0, left: 0,
+                  width: '200%',   // double-wide so we can slide it
+                  height: '100%',
+                  transform: `translateX(calc(${waveTx} - 50%))`,
+                  transition: `transform ${STEP_MS * 0.85}ms ${ease}`,
+                  animation: visible ? `archWaveGlow ${STEP_MS * 2}ms ease-in-out infinite` : 'none',
+                }}
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%"   stopColor={ORANGE} stopOpacity="0" />
+                    <stop offset="30%"  stopColor={ORANGE} stopOpacity="0.3" />
+                    <stop offset="50%"  stopColor={ORANGE} stopOpacity="1" />
+                    <stop offset="70%"  stopColor={ORANGE} stopOpacity="0.3" />
+                    <stop offset="100%" stopColor={ORANGE} stopOpacity="0" />
+                  </linearGradient>
+                  <filter id="waveBlur">
+                    <feGaussianBlur stdDeviation="2" />
+                  </filter>
+                </defs>
+                {/* Glow blur copy */}
+                <path
+                  d="M0,24 C100,4 200,44 400,24 C600,4 700,44 800,24"
+                  fill="none"
+                  stroke="url(#waveGrad)"
+                  strokeWidth="8"
+                  filter="url(#waveBlur)"
+                />
+                {/* Crisp line on top */}
+                <path
+                  d="M0,24 C100,4 200,44 400,24 C600,4 700,44 800,24"
+                  fill="none"
+                  stroke="url(#waveGrad)"
+                  strokeWidth="2.5"
+                />
+
+              </svg>
+            </div>
+
+            {/* ── Node chain ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+              {ARCH_NODES.map((node, i) => {
+                const isGlowing = glowNode === i
+                const isHovered = hoveredNode === i
+                const isActive = isGlowing || isHovered
+                const connectorLit = i < glowNode
+
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                    <div
+                      onMouseEnter={() => setHoveredNode(i)}
+                      onMouseLeave={() => setHoveredNode(null)}
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                        padding: '16px 12px', borderRadius: 14, cursor: 'default', flex: 1,
+                        backgroundColor: isActive ? '#ffffff' : 'transparent',
+                        border: `2px solid ${isGlowing ? node.color : 'transparent'}`,
+                        outline: isGlowing ? `3px solid ${node.color}40` : 'none',
+                        outlineOffset: 2,
+                        boxShadow: isGlowing
+                          ? `0 8px 32px ${node.color}40`
+                          : isHovered
+                            ? '0 8px 24px rgba(0,0,0,0.08)'
+                            : 'none',
+                        transition: `all 300ms ${ease}`,
+                      }}
+                    >
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 14,
+                        backgroundColor: isActive ? node.color : `${node.color}20`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: isGlowing ? `0 0 20px ${node.color}80` : 'none',
+                        transition: `background-color 300ms ${ease}, box-shadow 300ms ${ease}`,
+                      }}>
+                        <div style={{
+                          width: 16, height: 16, borderRadius: '50%',
+                          backgroundColor: isActive ? '#fff' : node.color,
+                          transition: `background-color 300ms ${ease}`,
+                        }} />
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: isGlowing ? node.color : DARK, textAlign: 'center' as const, transition: `color 300ms ${ease}` }}>
+                        {node.label}
+                      </div>
+                      <div style={{ fontSize: 10, color: GRAY, textAlign: 'center' as const }}>{node.sub}</div>
+                    </div>
+
+                    {i < N - 1 && (
+                      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, width: 24 }}>
+                        <div style={{
+                          flex: 1, height: 2, borderRadius: 9999,
+                          backgroundColor: connectorLit ? ARCH_NODES[i].color : '#e5e7eb',
+                          boxShadow: connectorLit ? `0 0 6px ${ARCH_NODES[i].color}80` : 'none',
+                          transition: `background-color 400ms ${ease}, box-shadow 400ms ${ease}`,
+                        }} />
+                        <ArrowRight size={12} color={connectorLit ? ARCH_NODES[i].color : '#9ca3af'} style={{ transition: `color 400ms ${ease}` }} />
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize:12,fontWeight:600,color:DARK,textAlign:'center' as const }}>{node.label}</div>
-                  <div style={{ fontSize:10,color:GRAY,textAlign:'center' as const }}>{node.sub}</div>
-                </div>
-                {i < ARCH_NODES.length - 1 && (
-                  <div style={{ display:'flex', alignItems:'center', flexShrink:0, width:24 }}>
-                    <div style={{ flex:1, height:1, backgroundColor:'#e5e7eb' }} />
-                    <ArrowRight size={12} color="#9ca3af" />
-                  </div>
-                )}
-              </div>
-            ))}
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>
     </section>
   )
 }
-
 /* ══════════════════════════════════════════
    SECTION 7 — CTA
 ══════════════════════════════════════════ */

@@ -1,10 +1,11 @@
 import './index.css'
-import { Component, type ReactNode } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { Component, type ReactNode, useEffect, useRef, useState } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { HeroSection } from './components/landing/HeroSection'
 import { AboutSection } from './components/landing/AboutSection'
 import { CaseStudiesSection } from './components/landing/CaseStudiesSection'
 import { Footer } from './components/landing/Footer'
+import { ExplorePlatformPage } from './pages/ExplorePlatformPage'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 import { DashboardPage } from './pages/DashboardPage'
 
@@ -37,14 +38,59 @@ function LandingPage() {
   )
 }
 
-function App() {
+/** Wraps each route in a fade-in/out transition */
+function PageTransition({ children }: { children: ReactNode }) {
+  const location = useLocation()
+  const [displayChildren, setDisplayChildren] = useState(children)
+  const [opacity, setOpacity] = useState(1)
+  const prevKey = useRef(location.key)
+
+  useEffect(() => {
+    if (prevKey.current === location.key) return
+    prevKey.current = location.key
+
+    // Fade out
+    setOpacity(0)
+    const fadeOut = setTimeout(() => {
+      setDisplayChildren(children)
+      // Fade in
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setOpacity(1))
+      })
+    }, 280)
+
+    return () => clearTimeout(fadeOut)
+  }, [location.key, children])
+
+  // Sync children when same route re-renders
+  useEffect(() => {
+    setDisplayChildren(children)
+  }, [children])
+
   return (
-    <BrowserRouter>
-      <Routes>
+    <div
+      style={{
+        opacity,
+        transition: 'opacity 280ms cubic-bezier(0.25,0.1,0.25,1)',
+        minHeight: '100vh',
+      }}
+    >
+      {displayChildren}
+    </div>
+  )
+}
+
+function App() {
+  const location = useLocation()
+
+  return (
+    <PageTransition key={location.pathname}>
+      <Routes location={location}>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/explore-platform" element={<ExplorePlatformPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
       </Routes>
-    </BrowserRouter>
+    </PageTransition>
   )
 }
 

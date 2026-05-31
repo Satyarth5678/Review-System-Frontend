@@ -1,11 +1,9 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
 import { TextRollButton } from '../ui/TextRollButton'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'
 const GRAY = '#6b7280'
-const ease = 'cubic-bezier(0.25,0.1,0.25,1)'
 
 function Pill({ label, accent = false }: { label: string; accent?: boolean }) {
   return (

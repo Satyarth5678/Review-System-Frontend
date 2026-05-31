@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight } from 'lucide-react'
-import { TextRollButton } from '../ui/TextRollButton'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'

@@ -3,7 +3,6 @@ import { ArrowLeft, Scale } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { analyzeContract, updateSessionText } from '../lib/reviewApi'
 import type { ReviewResult, SuggestionDecision } from '../types/review'
-import { useWindowWidth } from '../hooks/useWindowWidth'
 
 // Import modular components
 import { DashboardTopBar, type StepId } from '../components/dashboard/DashboardTopBar'

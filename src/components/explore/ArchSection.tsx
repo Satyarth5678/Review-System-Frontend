@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ArrowRight } from 'lucide-react'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'

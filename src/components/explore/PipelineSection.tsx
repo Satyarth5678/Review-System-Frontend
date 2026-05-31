@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Upload, FileText, Cpu, ShieldAlert, FileEdit, BarChart3,
-  CheckCircle, ArrowRight, Zap, Database, GitBranch, Layers, Play, RotateCcw
+  Upload, FileText, ShieldAlert, FileEdit, BarChart3,
+  CheckCircle, Zap, Database, GitBranch, Layers, Play, RotateCcw
 } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'
 const GRAY = '#6b7280'
-const LIGHT = '#f9fafb'
 const ease = 'cubic-bezier(0.25,0.1,0.25,1)'
 
 /* ── Intersection-observer fade-in hook ── */
@@ -32,8 +31,17 @@ function useReveal(threshold = 0.15) {
 function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   const [val, setVal] = useState(0)
   const { ref, visible } = useReveal(0.3)
+  const [prevVisible, setPrevVisible] = useState(visible)
+
+  if (visible !== prevVisible) {
+    setPrevVisible(visible)
+    if (!visible) {
+      setVal(0)
+    }
+  }
+
   useEffect(() => {
-    if (!visible) { setVal(0); return }
+    if (!visible) return
     let start = 0
     const step = Math.ceil(to / 60)
     const id = setInterval(() => {

@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { AIVerifiedIcon } from '../icons/AIVerifiedIcon'
-import { ArrowRight } from 'lucide-react'
 import { TextRollButton } from '../ui/TextRollButton'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
@@ -130,7 +129,6 @@ function AnimatedText({
 function FeedbackStrip() {
   const [feedback, setFeedback] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [btnHovered, setBtnHovered] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

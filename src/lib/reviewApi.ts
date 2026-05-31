@@ -8,11 +8,6 @@ import type {
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 
-interface SectionResult {
-  success?: boolean
-  response?: unknown
-}
-
 const DEFAULT_CLASSIFICATION: ClassificationData = {
   documentType: 'Not available',
   language: 'Not available',
@@ -40,20 +35,28 @@ function maybeParse(value: unknown): unknown {
   }
 }
 
+interface SectionPayload {
+  success?: boolean
+  error?: unknown
+  detail?: unknown
+  response?: unknown
+  data?: unknown
+}
+
 function unwrapSection<T>(raw: unknown, label: string, warnings: string[]): T | null {
   if (!raw || typeof raw !== 'object') {
     warnings.push(`${label} raw data was invalid or null.`)
     return null
   }
 
-  const section = asRecord(raw) as Record<string, any>
+  const section = asRecord(raw) as Record<string, unknown> & SectionPayload
 
   if (section.success === false) {
     warnings.push(`${label} failed: ${asString(section.error ?? section.detail, 'Unknown backend error')}`)
     return null
   }
 
-  const responseObj = section.response !== undefined ? asRecord(maybeParse(section.response)) : section
+  const responseObj = (section.response !== undefined ? asRecord(maybeParse(section.response)) : section) as Record<string, unknown> & SectionPayload
 
   if (responseObj.success === false) {
     warnings.push(`${label}: ${asString(responseObj.error ?? responseObj.detail, 'The backend did not return usable data.')}`)
@@ -239,7 +242,7 @@ export async function updateSessionText(sessionId: string, newText: string): Pro
   return await response.json()
 }
 
-export async function fetchSession(sessionId: string): Promise<any> {
+export async function fetchSession(sessionId: string): Promise<unknown> {
   const response = await fetch(`${API_BASE_URL}/session/${sessionId}`, {
     method: 'GET',
   })

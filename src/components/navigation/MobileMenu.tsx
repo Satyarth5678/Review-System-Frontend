@@ -82,7 +82,7 @@ export function MobileMenu({ isOpen, onClose }: Props) {
       >
         <div style={{ padding: 24 }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
             <span style={{ fontSize: 13, color: '#4b5563', backgroundColor: '#f3f4f6', borderRadius: 9999, padding: '6px 12px' }}>
               {time} in India
             </span>

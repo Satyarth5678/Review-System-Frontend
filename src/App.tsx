@@ -42,12 +42,27 @@ function LandingPage() {
 function PageTransition({ children }: { children: ReactNode }) {
   const location = useLocation()
   const [displayChildren, setDisplayChildren] = useState(children)
+  const [prevChildren, setPrevChildren] = useState(children)
+  const [lastKey, setLastKey] = useState(location.key)
   const [opacity, setOpacity] = useState(1)
-  const prevKey = useRef(location.key)
+  const transitionKey = useRef(location.key)
+
+  const keyChanged = location.key !== lastKey
+
+  if (keyChanged) {
+    setLastKey(location.key)
+  }
+
+  if (children !== prevChildren) {
+    setPrevChildren(children)
+    if (!keyChanged) {
+      setDisplayChildren(children)
+    }
+  }
 
   useEffect(() => {
-    if (prevKey.current === location.key) return
-    prevKey.current = location.key
+    if (transitionKey.current === location.key) return
+    transitionKey.current = location.key
 
     // Fade out
     setOpacity(0)
@@ -61,11 +76,6 @@ function PageTransition({ children }: { children: ReactNode }) {
 
     return () => clearTimeout(fadeOut)
   }, [location.key, children])
-
-  // Sync children when same route re-renders
-  useEffect(() => {
-    setDisplayChildren(children)
-  }, [children])
 
   return (
     <div

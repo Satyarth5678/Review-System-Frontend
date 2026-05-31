@@ -181,7 +181,7 @@ function FeatureCard({
 
   return (
     <div
-      ref={ref as any}
+      ref={ref as React.RefObject<HTMLDivElement>}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={revealed ? `card-reveal card-delay-${(index % 4) + 1}` : ''}

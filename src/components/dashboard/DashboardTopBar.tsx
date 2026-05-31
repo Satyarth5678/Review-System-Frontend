@@ -1,8 +1,9 @@
 import { FolderUp, Loader2, ClipboardList, BookOpen, ShieldAlert, Sparkles, Download, Check } from 'lucide-react'
+import type { ReviewResult } from '../../types/review'
 
 export type StepId = 'upload' | 'processing' | 'overview' | 'summary' | 'risks' | 'redline' | 'export'
 
-const STEPS: Array<{ id: StepId; label: string; icon: any }> = [
+const STEPS: Array<{ id: StepId; label: string; icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }> }> = [
   { id: 'upload', label: 'Upload', icon: FolderUp },
   { id: 'processing', label: 'Processing', icon: Loader2 },
   { id: 'overview', label: 'Overview', icon: ClipboardList },
@@ -14,7 +15,7 @@ const STEPS: Array<{ id: StepId; label: string; icon: any }> = [
 
 interface TopBarProps {
   activeStep: StepId
-  result: any | null
+  result: ReviewResult | null
   isAnalyzing: boolean
   onStepChange: (step: StepId) => void
 }

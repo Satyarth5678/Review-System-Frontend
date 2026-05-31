@@ -17,7 +17,7 @@ const panelStyle = {
   boxShadow: '0 8px 32px rgba(17,24,39,0.04)',
 }
 
-function severityTone(severity: any) {
+function severityTone(severity: unknown) {
   const normalized = String(severity).toLowerCase()
   if (normalized === 'critical') return { bg: 'rgba(127,29,29,0.1)', color: '#991b1b', label: 'Critical' }
   if (normalized === 'high') return { bg: 'rgba(239,68,68,0.1)', color: '#ef4444', label: 'High' }

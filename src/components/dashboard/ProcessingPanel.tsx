@@ -1,4 +1,5 @@
 import { AlertTriangle, Check, CheckCircle, Loader2, RefreshCw } from 'lucide-react'
+import type { ReviewResult } from '../../types/review'
 
 const colors = {
   orange: '#F26522',
@@ -18,7 +19,7 @@ const PROCESSING_STEPS = [
 
 interface ProcessingPanelProps {
   isAnalyzing: boolean
-  result: any | null
+  result: ReviewResult | null
   error: string | null
   onRetry: () => void
 }

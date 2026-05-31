@@ -82,11 +82,8 @@ function Pill({ label, accent = false }: { label: string; accent?: boolean }) {
 export function AIModulesSection() {
   const [active, setActive] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
-  const [fadeKey, setFadeKey] = useState(0)
   const width = useWindowWidth()
   const isLg = width >= 1024
-  const mod = AI_MODULES[active]
-  const Icon = mod.icon
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [sectionRef, sectionRevealed] = useScrollReveal(0.05)
 
@@ -99,7 +96,6 @@ export function AIModulesSection() {
     timerRef.current = setInterval(() => {
       setActive(a => {
         const next = (a + 1) % AI_MODULES.length
-        setFadeKey(k => k + 1)
         return next
       })
     }, 5500)
@@ -109,7 +105,6 @@ export function AIModulesSection() {
   const handleModuleClick = (i: number) => {
     if (i !== active) {
       setActive(i)
-      setFadeKey(k => k + 1)
     }
   }
 

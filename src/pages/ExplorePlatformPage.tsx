@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { Navbar } from '../components/navigation/Navbar'
 import { Footer } from '../components/landing/Footer'
 import { HeroExplore } from '../components/explore/HeroExplore'
 import { PipelineSection } from '../components/explore/PipelineSection'
@@ -17,7 +16,6 @@ export function ExplorePlatformPage() {
 
   return (
     <div style={{ width: '100%', margin: 0, padding: 0, backgroundColor: '#ffffff' }}>
-      <Navbar />
       <HeroExplore />
       <PipelineSection />
       <TechStackSection />

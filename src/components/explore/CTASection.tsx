@@ -84,12 +84,13 @@ export function CTASection() {
 
         {/* Heading — word-by-word slide-up */}
         <h2 style={{
-          fontSize: 'clamp(1.8rem,4vw,3.2rem)',
-          fontWeight: 500,
+          fontSize: 'clamp(1.6rem, 3.8vw, 3rem)',
+          fontWeight: 600,
           letterSpacing: '-0.02em',
           color: DARK,
           margin: '20px 0 16px',
           overflow: 'hidden',
+          lineHeight: 1.15,
         }}>
           <AnimatedHeading text="Put the pipeline to work" visible={visible} delay={100} />
           <br />

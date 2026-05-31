@@ -213,8 +213,8 @@ export function HeroSection() {
           <h1
             data-speed="0.92"
             style={{
-              fontSize: 'clamp(1.75rem,7vw,4.2rem)',
-              lineHeight: 1.15,
+              fontSize: 'clamp(2.1rem, 6.2vw, 4.6rem)',
+              lineHeight: 1.1,
               letterSpacing: '-0.03em',
               fontWeight: 600,
               color: '#111827',

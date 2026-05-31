@@ -1,4 +1,5 @@
 import { useWindowWidth } from '../../hooks/useWindowWidth'
+import { useScrollReveal } from '../../hooks/useScrollReveal'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'
@@ -33,11 +34,17 @@ function Pill({ label }: { label: string }) {
 export function TechStackSection() {
   const width = useWindowWidth()
   const cols = width >= 1024 ? 2 : 1
+  const [sectionRef, sectionRevealed] = useScrollReveal(0.05)
 
   return (
-    <section id="tech-stack" style={{
-      backgroundColor: LIGHT, padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)',
-    }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      id="tech-stack"
+      className={`section-reveal ${sectionRevealed ? 'revealed' : ''}`}
+      style={{
+        backgroundColor: LIGHT, padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)',
+      }}
+    >
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 'clamp(40px,5vw,64px)' }}>
@@ -47,7 +54,7 @@ export function TechStackSection() {
             </div>
             <Pill label="Tech Stack" />
           </div>
-          <h2 style={{ fontSize: 'clamp(1.6rem,3.6vw,3rem)', fontWeight: 500, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px' }}>
+          <h2 style={{ fontSize: 'clamp(1.6rem, 3.8vw, 3rem)', fontWeight: 600, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px', lineHeight: 1.15 }}>
             Lightweight, local technology stack
           </h2>
           <p style={{ fontSize: 16, color: GRAY, lineHeight: 1.6, maxWidth: 520, margin: 0 }}>

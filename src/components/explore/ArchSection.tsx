@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useScrollReveal } from '../../hooks/useScrollReveal'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'
@@ -37,6 +38,7 @@ export function ArchSection() {
   const N = ARCH_NODES.length
   const nodeWidthPct = 100 / N
   const waveTx = `${(waveOffset % N) * nodeWidthPct}%`
+  const [sectionRef, sectionRevealed] = useScrollReveal(0.05)
 
   useEffect(() => {
     glowTimer.current = setInterval(() => {
@@ -47,9 +49,13 @@ export function ArchSection() {
   }, [N])
 
   return (
-    <section style={{
-      backgroundColor: '#f9fafb', padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)', overflow: 'hidden',
-    }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      className={`section-reveal ${sectionRevealed ? 'revealed' : ''}`}
+      style={{
+        backgroundColor: '#f9fafb', padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)', overflow: 'hidden',
+      }}
+    >
       <style>{`
         @keyframes archWaveGlow {
           0%, 100% { opacity: 0.55; }
@@ -66,7 +72,7 @@ export function ArchSection() {
             </div>
             <Pill label="Architecture" />
           </div>
-          <h2 style={{ fontSize: 'clamp(1.6rem,3.6vw,3rem)', fontWeight: 500, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px' }}>
+          <h2 style={{ fontSize: 'clamp(1.6rem, 3.8vw, 3rem)', fontWeight: 600, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px', lineHeight: 1.15 }}>
             Request flow architecture
           </h2>
           <p style={{ fontSize: 16, color: GRAY, lineHeight: 1.6, maxWidth: 520, margin: 0 }}>
@@ -130,78 +136,69 @@ export function ArchSection() {
             </div>
 
             {/* ── Node chain ── */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {ARCH_NODES.map((node, i) => {
                 const isGlowing = glowNode === i
                 const isHovered = hoveredNode === i
                 const isActive = isGlowing || isHovered
-                const connectorLit = i < glowNode
+                // Pulse connector ahead of the glowing node
+                const connectorLit = glowNode === i || glowNode === i + 1
 
                 return (
                   <React.Fragment key={i}>
-                    <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                      <div
-                        onMouseEnter={() => setHoveredNode(i)}
-                        onMouseLeave={() => setHoveredNode(null)}
-                        style={{
-                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                          padding: '16px 12px', borderRadius: 14, cursor: 'default', flex: 1,
-                          backgroundColor: isActive ? '#ffffff' : 'transparent',
-                          border: `2px solid ${isGlowing ? node.color : 'transparent'}`,
-                          outline: isGlowing ? `3px solid ${node.color}40` : 'none',
-                          outlineOffset: 2,
-                          boxShadow: isGlowing
-                            ? `0 8px 32px ${node.color}40`
-                            : isHovered
-                              ? '0 8px 24px rgba(0,0,0,0.08)'
-                              : 'none',
-                          transition: `all 300ms ${ease}`,
-                        }}
-                      >
+                    <div
+                      onMouseEnter={() => setHoveredNode(i)}
+                      onMouseLeave={() => setHoveredNode(null)}
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                        padding: '16px 12px', borderRadius: 14, cursor: 'default', flex: 1,
+                        backgroundColor: isActive ? '#ffffff' : 'transparent',
+                        border: `1px solid ${isGlowing ? `${node.color}40` : 'transparent'}`,
+                        boxShadow: isGlowing
+                          ? `0 0 20px ${node.color}15, 0 8px 16px ${node.color}10`
+                          : isHovered
+                            ? '0 8px 24px rgba(0,0,0,0.06)'
+                            : 'none',
+                        transition: 'all 500ms ease',
+                      }}
+                    >
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 14,
+                        backgroundColor: isActive ? node.color : `${node.color}15`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: isGlowing ? `0 0 16px ${node.color}50` : 'none',
+                        transition: 'all 500ms ease',
+                      }}>
                         <div style={{
-                          width: 48, height: 48, borderRadius: 14,
-                          backgroundColor: isActive ? node.color : `${node.color}20`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          boxShadow: isGlowing ? `0 0 20px ${node.color}80` : 'none',
-                          transition: `background-color 300ms ${ease}, box-shadow 300ms ${ease}`,
-                        }}>
-                          <div style={{
-                            width: 16, height: 16, borderRadius: '50%',
-                            backgroundColor: isActive ? '#fff' : node.color,
-                            transition: `background-color 300ms ${ease}`,
-                          }} />
-                        </div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: isGlowing ? node.color : DARK, textAlign: 'center', transition: `color 300ms ${ease}` }}>
-                          {node.label}
-                        </div>
-                        <div style={{ fontSize: 10, color: GRAY, textAlign: 'center' }}>{node.sub}</div>
+                          width: 16, height: 16, borderRadius: '50%',
+                          backgroundColor: isActive ? '#fff' : node.color,
+                          transition: 'background-color 500ms ease',
+                        }} />
                       </div>
-
-                      {i < N - 1 && (
-                        <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, width: 24 }}>
-                          <div style={{
-                            flex: 1, height: 2, borderRadius: 9999,
-                            backgroundColor: connectorLit ? ARCH_NODES[i].color : '#e5e7eb',
-                            boxShadow: connectorLit ? `0 0 6px ${ARCH_NODES[i].color}80` : 'none',
-                            transition: `background-color 400ms ${ease}, box-shadow 400ms ${ease}`,
-                          }} />
-                          <svg width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }}>
-                            <path
-                              d="M 2,2 L 10,6 L 2,10"
-                              fill="none"
-                              stroke={connectorLit ? ARCH_NODES[i].color : '#9ca3af'}
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              style={{
-                                transition: `stroke 400ms ${ease}`,
-                                filter: connectorLit ? `drop-shadow(0 0 3px ${ARCH_NODES[i].color}80)` : 'none'
-                              }}
-                            />
-                          </svg>
-                        </div>
-                      )}
+                      <div style={{ fontSize: 13, fontWeight: 700, color: isGlowing ? node.color : DARK, textAlign: 'center', transition: 'color 500ms ease' }}>
+                        {node.label}
+                      </div>
+                      <div style={{ fontSize: 11, color: GRAY, textAlign: 'center' }}>{node.sub}</div>
                     </div>
+
+                    {i < N - 1 && (
+                      <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, width: 24, justifyContent: 'center' }}>
+                        <svg width="24" height="12" viewBox="0 0 24 12" style={{ overflow: 'visible' }}>
+                          <path
+                            d="M 0,6 L 20,6 M 15,1 L 20,6 L 15,11"
+                            fill="none"
+                            stroke={connectorLit ? ARCH_NODES[i].color : '#e5e7eb'}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            style={{
+                              transition: 'all 500ms ease',
+                              filter: connectorLit ? `drop-shadow(0 0 4px ${ARCH_NODES[i].color}80)` : 'none'
+                            }}
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </React.Fragment>
                 )
               })}

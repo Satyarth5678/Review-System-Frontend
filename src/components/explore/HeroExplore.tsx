@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Navbar } from '../navigation/Navbar'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'
@@ -30,15 +31,11 @@ export function HeroExplore() {
   return (
     <section style={{
       position: 'relative',
-      minHeight: '92vh',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      textAlign: 'center',
-      overflow: 'hidden',
       backgroundColor: '#EFEFEF',
-      padding: 'clamp(80px,10vw,140px) clamp(20px,4vw,48px) clamp(60px,8vw,100px)',
+      overflow: 'hidden',
     }}>
       <style>{`
         @keyframes exploreOrb1 {
@@ -130,12 +127,25 @@ export function HeroExplore() {
         }} />
       </div>
 
-      <div style={{ position: 'relative', zIndex: 10, maxWidth: 860 }}>
+      {/* ── Navbar z-20 ── */}
+      <div style={{ position: 'relative', zIndex: 20 }}>
+        <Navbar />
+      </div>
+
+      {/* ── Spacer ── */}
+      <div style={{ flex: 1 }} />
+
+      {/* ── Hero content ── */}
+      <div style={{
+        position: 'relative', zIndex: 10, maxWidth: 860, width: '100%',
+        margin: '0 auto', padding: 'clamp(20px,4vw,48px)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
+      }}>
         <div style={{ marginBottom: 24, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)', transition: `opacity 600ms ${ease}, transform 600ms ${ease}` }}>
           <Pill label="Interactive Deep Dive" accent />
         </div>
         <h1 style={{
-          fontSize: 'clamp(2.1rem, 6.2vw, 4.6rem)', fontWeight: 500, lineHeight: 1.1,
+          fontSize: 'clamp(2.1rem, 6.2vw, 4.6rem)', fontWeight: 600, lineHeight: 1.1,
           letterSpacing: '-0.03em', color: DARK, margin: '0 0 24px',
           opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(30px)',
           transition: `opacity 700ms ${ease} 100ms, transform 700ms ${ease} 100ms`,
@@ -185,6 +195,9 @@ export function HeroExplore() {
           </a>
         </div>
       </div>
+
+      {/* ── Spacer ── */}
+      <div style={{ flex: 1.3 }} />
     </section>
   )
 }

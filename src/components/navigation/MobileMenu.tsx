@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { label: 'Features', href: '#features' },
   { label: 'Workflow', href: '#workflow' },
   { label: 'Contact Us', href: '#contact' },
-  { label: 'Explore Platform', to: '/explore' }
+  { label: 'Explore the Platform', to: '/explore' }
 ]
 
 interface Props {
@@ -108,9 +108,10 @@ export function MobileMenu({ isOpen, onClose }: Props) {
                 href={item.to ?? ('/' + item.href)}
                 onClick={(e) => handleLinkClick(e, item)}
                 style={{
-                  fontSize: 28, lineHeight: '32px', fontWeight: 500,
+                  fontSize: 28, lineHeight: '32px', fontWeight: 600,
                   color: '#111827', textDecoration: 'none', padding: '4px 0',
-                  fontFamily: "'Fraunces', serif"
+                  fontFamily: "'DM Sans', sans-serif",
+                  letterSpacing: '-0.02em',
                 }}
               >
                 {item.label}

@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { label: 'Features', href: '#features' },
   { label: 'Workflow', href: '#workflow' },
   { label: 'Contact Us', href: '#contact' },
-  { label: 'Explore Platform', to: '/explore' }
+  { label: 'Explore the Platform', to: '/explore' }
 ]
 
 export function Navbar() {
@@ -51,7 +51,12 @@ export function Navbar() {
               >
                 <span style={{ color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>LX</span>
               </div>
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#111827', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>Lexa AI</span>
+              <span 
+                onClick={() => { navigate('/'); window.scrollTo(0, 0) }}
+                style={{ fontSize: 14, fontWeight: 600, color: '#111827', letterSpacing: '-0.01em', whiteSpace: 'nowrap', cursor: 'pointer' }}
+              >
+                Lexa AI
+              </span>
 
               {isMd && (
                 <nav style={{ display: 'flex', alignItems: 'center', gap: 20 }}>

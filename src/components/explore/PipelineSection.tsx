@@ -1,31 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Upload, FileText, ShieldAlert, FileEdit, BarChart3,
   CheckCircle, Zap, Database, GitBranch, Layers, Play, RotateCcw
 } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
+import { useScrollReveal } from '../../hooks/useScrollReveal'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'
 const GRAY = '#6b7280'
 const ease = 'cubic-bezier(0.25,0.1,0.25,1)'
 
-/* ── Intersection-observer fade-in hook ── */
-function useReveal(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { setVisible(e.isIntersecting) },
-      { threshold }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [threshold])
-  return { ref, visible }
-}
 
 const PIPELINE_STEPS = [
   { icon: Upload,      label: 'Contract Upload',         desc: 'PDF, DOCX or TXT dropped via Upload API',          color: '#6366f1' },
@@ -69,7 +54,6 @@ function PipelineStep({
   const isActive = activeStep === index && !isAllComplete
   const isDone = completedSteps.includes(index)
   const isHovered = hoveredStep === index
-  // On hover, show as completed visually
   const showComplete = isDone || isHovered
 
   return (
@@ -88,18 +72,18 @@ function PipelineStep({
             : isDone
               ? 'rgba(34,197,94,0.02)'
               : 'transparent',
-        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+        transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
         boxShadow: isHovered
-          ? '0 8px 20px rgba(0,0,0,0.08)'
+          ? '0 6px 16px rgba(0,0,0,0.04)'
           : 'none',
-        transition: `all 300ms ${ease}`,
+        transition: `all 250ms ${ease}`,
       }}
     >
       <div style={{
         width: 32, height: 32, borderRadius: 8, flexShrink: 0,
         backgroundColor: showComplete ? '#22c55e' : isActive ? step.color : '#f3f4f6',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: `background-color 300ms ${ease}`,
+        transition: `background-color 250ms ${ease}`,
         position: 'relative',
         boxShadow: isHovered
           ? '0 4px 12px rgba(34,197,94,0.3)'
@@ -117,19 +101,6 @@ function PipelineStep({
         <div style={{ fontSize: 14, fontWeight: 600, color: showComplete ? '#16a34a' : isActive ? DARK : isDone ? '#374151' : GRAY }}>
           {String(index + 1).padStart(2, '0')} — {step.label}
         </div>
-        {/* Show description on hover */}
-        <div style={{
-          fontSize: 12,
-          color: GRAY,
-          lineHeight: 1.5,
-          maxHeight: isHovered ? 40 : 0,
-          opacity: isHovered ? 1 : 0,
-          overflow: 'hidden',
-          transition: `max-height 300ms ${ease}, opacity 250ms ${ease}`,
-          marginTop: isHovered ? 4 : 0,
-        }}>
-          {step.desc}
-        </div>
       </div>
     </button>
   )
@@ -142,6 +113,7 @@ export function PipelineSection() {
   const [hoveredStep, setHoveredStep] = useState<number | null>(null)
   const width = useWindowWidth()
   const isLg = width >= 1024
+  const [sectionRef, sectionRevealed] = useScrollReveal(0.05)
 
   useEffect(() => {
     if (!running) return
@@ -162,8 +134,7 @@ export function PipelineSection() {
   const startAuto = () => {
     setRunning(false)
     setTimeout(() => {
-      setCompletedSteps([])
-      setActiveStep(0)
+      reset()
       setRunning(true)
     }, 10)
   }
@@ -180,9 +151,14 @@ export function PipelineSection() {
   const isAllComplete = completedSteps.length === PIPELINE_STEPS.length && !running
 
   return (
-    <section id="pipeline" style={{
-      backgroundColor: '#ffffff', padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)',
-    }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      id="pipeline"
+      className={`section-reveal ${sectionRevealed ? 'revealed' : ''}`}
+      style={{
+        backgroundColor: '#ffffff', padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)',
+      }}
+    >
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 'clamp(40px,5vw,64px)' }}>
@@ -192,7 +168,7 @@ export function PipelineSection() {
             </div>
             <Pill label="Backend Pipeline" />
           </div>
-          <h2 style={{ fontSize: 'clamp(1.6rem,3.6vw,3rem)', fontWeight: 500, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px' }}>
+          <h2 style={{ fontSize: 'clamp(1.6rem, 3.8vw, 3rem)', fontWeight: 600, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px', lineHeight: 1.15 }}>
             10-step processing pipeline
           </h2>
           <p style={{ fontSize: 16, color: GRAY, lineHeight: 1.6, maxWidth: 520, margin: 0 }}>
@@ -221,7 +197,16 @@ export function PipelineSection() {
                     setCompletedSteps(Array.from({ length: i }, (_, k) => k))
                   }
                 }}
-                onHover={() => setHoveredStep(i)}
+                onHover={() => {
+                  setHoveredStep(i)
+                  setRunning(false)
+                  setActiveStep(i)
+                  if (i === PIPELINE_STEPS.length - 1) {
+                    setCompletedSteps(Array.from({ length: PIPELINE_STEPS.length }, (_, k) => k))
+                  } else {
+                    setCompletedSteps(Array.from({ length: i }, (_, k) => k))
+                  }
+                }}
                 onLeave={() => setHoveredStep(null)}
               />
             ))}

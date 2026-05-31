@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { FileText, ShieldAlert, FileEdit, GitBranch } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
+import { useScrollReveal } from '../../hooks/useScrollReveal'
 
 const ORANGE = '#F26522'
 const DARK = '#111827'
@@ -87,6 +88,7 @@ export function AIModulesSection() {
   const mod = AI_MODULES[active]
   const Icon = mod.icon
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [sectionRef, sectionRevealed] = useScrollReveal(0.05)
 
   // Smoother auto-loop with pause on hover
   useEffect(() => {
@@ -112,9 +114,13 @@ export function AIModulesSection() {
   }
 
   return (
-    <section style={{
-      backgroundColor: '#ffffff', padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)',
-    }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      className={`section-reveal ${sectionRevealed ? 'revealed' : ''}`}
+      style={{
+        backgroundColor: '#ffffff', padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)',
+      }}
+    >
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 'clamp(40px,5vw,64px)' }}>
@@ -124,8 +130,8 @@ export function AIModulesSection() {
             </div>
             <Pill label="AI Modules" accent />
           </div>
-          <h2 style={{ fontSize: 'clamp(1.6rem,3.6vw,3rem)', fontWeight: 500, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px' }}>
-            Four parallel AI analysis modules
+          <h2 style={{ fontSize: 'clamp(1.6rem, 3.8vw, 3rem)', fontWeight: 600, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px', lineHeight: 1.15 }}>
+            Four legal AI modules
           </h2>
           <p style={{ fontSize: 16, color: GRAY, lineHeight: 1.6, maxWidth: 520, margin: 0 }}>
             Each module runs a specialised prompt chain against the Gemma 4 model via Ollama.
@@ -164,79 +170,93 @@ export function AIModulesSection() {
         </div>
 
         {/* Unified Card Container */}
-        <div 
+        <div
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          style={{ 
-            backgroundColor: '#f9fafb', borderRadius: 24, padding: 'clamp(32px,4vw,48px)', 
-            border: '1px solid #f3f4f6', boxShadow: '0 12px 40px rgba(0,0,0,0.03)' 
+          style={{
+            backgroundColor: '#f9fafb', borderRadius: 24, padding: 'clamp(32px,4vw,48px)',
+            border: '1px solid #f3f4f6', boxShadow: '0 12px 40px rgba(0,0,0,0.03)',
+            overflow: 'hidden'
           }}
         >
           <div style={{ display: 'grid', gridTemplateColumns: isLg ? '1fr 1fr' : '1fr', gap: 'clamp(32px,4vw,64px)', alignItems: 'center' }}>
-            {/* Left: description — smooth crossfade */}
-            <div
-              key={`desc-${fadeKey}`}
-              style={{
-                display: 'flex', flexDirection: 'column', gap: 20,
-                opacity: 0,
-                transform: 'translateY(12px)',
-                animation: `moduleFadeIn 500ms ${ease} forwards`,
-              }}
-            >
-              <style>{`
-                @keyframes moduleFadeIn {
-                  from { opacity: 0; transform: translateY(12px); }
-                  to   { opacity: 1; transform: translateY(0); }
-                }
-              `}</style>
-              <div style={{
-                width: 56, height: 56, borderRadius: 16, backgroundColor: mod.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: `0 8px 24px ${mod.color}40`,
-                transition: `background-color 400ms ${ease}`,
-              }}>
-                <Icon size={24} color="#fff" />
-              </div>
-              <h3 style={{ fontSize: 'clamp(19px, 2.2vw, 27px)', fontWeight: 600, color: DARK, margin: 0, letterSpacing: '-0.01em' }}>
-                {mod.title}
-              </h3>
-              <p style={{ fontSize: 16, color: GRAY, lineHeight: 1.7, margin: 0 }}>{mod.desc}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
-                <span style={{ fontSize: 13, color: GRAY }}>Powered by Gemma 4 via Ollama · FastAPI endpoint</span>
-              </div>
+
+            {/* Left: descriptions stacked using grid-area */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
+              {AI_MODULES.map((m, idx) => {
+                const isCurrent = active === idx
+                const MIcon = m.icon
+                return (
+                  <div
+                    key={`desc-${m.id}`}
+                    style={{
+                      gridArea: '1 / 1',
+                      display: 'flex', flexDirection: 'column', gap: 20,
+                      opacity: isCurrent ? 1 : 0,
+                      pointerEvents: isCurrent ? 'auto' : 'none',
+                      transition: `opacity 600ms ${ease}`,
+                    }}
+                  >
+                    <div style={{
+                      width: 56, height: 56, borderRadius: 16, backgroundColor: m.color,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: `0 8px 24px ${m.color}40`,
+                      transition: `background-color 400ms ${ease}`,
+                    }}>
+                      <MIcon size={24} color="#fff" />
+                    </div>
+                    <h3 style={{ fontSize: 'clamp(19px, 2.2vw, 27px)', fontWeight: 600, color: DARK, margin: 0, letterSpacing: '-0.01em' }}>
+                      {m.title}
+                    </h3>
+                    <p style={{ fontSize: 16, color: GRAY, lineHeight: 1.7, margin: 0 }}>{m.desc}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+                      <span style={{ fontSize: 13, color: GRAY }}>Powered by Gemma 4 via Ollama · FastAPI endpoint</span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
-            {/* Right: mock output — smooth crossfade */}
-            <div
-              key={`code-${fadeKey}`}
-              style={{
-                backgroundColor: DARK, borderRadius: 16, padding: '24px',
-                fontFamily: 'monospace', fontSize: 14,
-                border: `1px solid ${mod.color}30`,
-                boxShadow: `0 12px 32px ${mod.color}15`,
-                opacity: 0,
-                transform: 'translateY(12px)',
-                animation: `moduleFadeIn 500ms ${ease} 80ms forwards`,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#ef4444' }} />
-                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: ORANGE }} />
-                <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
-                <span style={{ marginLeft: 8, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>response.json</span>
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>{'{'}</div>
-              {Object.entries(mod.output).map(([k, v], i) => (
-                <div key={i} style={{ paddingLeft: 16, marginBottom: 6 }}>
-                  <span style={{ color: '#93c5fd' }}>"{k}"</span>
-                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>: </span>
-                  <span style={{ color: '#86efac' }}>"{v}"</span>
-                  {i < Object.keys(mod.output).length - 1 && <span style={{ color: 'rgba(255,255,255,0.4)' }}>,</span>}
-                </div>
-              ))}
-              <div style={{ color: 'rgba(255,255,255,0.4)' }}>{'}'}</div>
+            {/* Right: mock output stacked using grid-area */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
+              {AI_MODULES.map((m, idx) => {
+                const isCurrent = active === idx
+                return (
+                  <div
+                    key={`code-${m.id}`}
+                    style={{
+                      gridArea: '1 / 1',
+                      backgroundColor: DARK, borderRadius: 16, padding: '24px',
+                      fontFamily: 'monospace', fontSize: 14,
+                      border: `1px solid ${m.color}30`,
+                      boxShadow: `0 12px 32px ${m.color}15`,
+                      opacity: isCurrent ? 1 : 0,
+                      pointerEvents: isCurrent ? 'auto' : 'none',
+                      transition: `opacity 600ms ${ease}`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#ef4444' }} />
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: ORANGE }} />
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+                      <span style={{ marginLeft: 8, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>response.json</span>
+                    </div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>{'{'}</div>
+                    {Object.entries(m.output).map(([k, v], i) => (
+                      <div key={i} style={{ paddingLeft: 16, marginBottom: 6 }}>
+                        <span style={{ color: '#93c5fd' }}>"{k}"</span>
+                        <span style={{ color: 'rgba(255,255,255,0.4)' }}>: </span>
+                        <span style={{ color: '#86efac' }}>"{v}"</span>
+                        {i < Object.keys(m.output).length - 1 && <span style={{ color: 'rgba(255,255,255,0.4)' }}>,</span>}
+                      </div>
+                    ))}
+                    <div style={{ color: 'rgba(255,255,255,0.4)' }}>{'}'}</div>
+                  </div>
+                )
+              })}
             </div>
+
           </div>
         </div>
       </div>

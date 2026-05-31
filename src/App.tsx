@@ -92,6 +92,26 @@ function PageTransition({ children }: { children: ReactNode }) {
 
 function App() {
   const location = useLocation()
+  const prevPathnameRef = useRef(location.pathname)
+
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.substring(1)
+      const el = document.getElementById(id)
+      if (el) {
+        const pathChanged = prevPathnameRef.current !== location.pathname
+        prevPathnameRef.current = location.pathname
+
+        const delay = pathChanged ? 320 : 0
+        const timer = setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, delay)
+        return () => clearTimeout(timer)
+      }
+    } else {
+      prevPathnameRef.current = location.pathname
+    }
+  }, [location.pathname, location.hash])
 
   return (
     <PageTransition key={location.pathname}>

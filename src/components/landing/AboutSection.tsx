@@ -232,10 +232,13 @@ export function AboutSection() {
   const navigate = useNavigate()
   const isMd = width >= 768
   const isLg = width >= 1024
+  const [sectionRef, sectionRevealed] = useScrollReveal(0.05)
 
   return (
     <section
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
       id="features"
+      className={`section-reveal ${sectionRevealed ? 'revealed' : ''}`}
       style={{ backgroundColor: '#ffffff', padding: 'clamp(64px,8vw,120px) 0', overflow: 'hidden' }}
     >
       <div style={{ maxWidth: 1440, margin: '0 auto' }}>
@@ -265,17 +268,17 @@ export function AboutSection() {
         >
           {/* Left: heading + text + button */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h2 style={{ fontSize: 'clamp(1.5rem,4vw,3.2rem)', lineHeight: 1.12, letterSpacing: '-0.02em', fontWeight: 500, color: '#111827', margin: 0 }}>
+            <h2 style={{ fontSize: 'clamp(1.6rem, 3.8vw, 3rem)', lineHeight: 1.15, letterSpacing: '-0.02em', fontWeight: 600, color: '#111827', margin: 0 }}>
               AI-driven legal analysis, built
               <br />
               for modern contract workflows.
             </h2>
-            <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.6, maxWidth: 480, margin: 0 }}>
+            <p style={{ fontSize: 16, color: '#6b7280', lineHeight: 1.65, maxWidth: 480, margin: 0 }}>
               Upload contracts, detect risky clauses, generate smart recommendations, and simplify legal workflows with AI.
             </p>
             <div>
               <TextRollButton
-                label="Explore Platform"
+                label="Explore the Platform"
                 bgColor="#111827"
                 bgHoverColor="#F26522"
                 hideArrow

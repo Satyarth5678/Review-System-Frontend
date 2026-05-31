@@ -260,8 +260,14 @@ function WorkflowCard({ number, title, description, index, children }: {
 export function CaseStudiesSection() {
   const width = useWindowWidth()
   const isMd = width >= 768
+  const [sectionRef, sectionRevealed] = useScrollReveal(0.05)
   return (
-    <section id="workflow" style={{ backgroundColor: '#F5F5F5', padding: 'clamp(64px,8vw,120px) 0' }}>
+    <section
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      id="workflow"
+      className={`section-reveal ${sectionRevealed ? 'revealed' : ''}`}
+      style={{ backgroundColor: '#F5F5F5', padding: 'clamp(64px,8vw,120px) 0' }}
+    >
       <div style={{ maxWidth: 1440, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: PX, paddingRight: PX, marginBottom: 'clamp(24px,3vw,32px)' }}>
           <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -271,7 +277,7 @@ export function CaseStudiesSection() {
             AI Contract Reviews
           </span>
         </div>
-        <h2 data-speed="0.95" style={{ paddingLeft: PX, paddingRight: PX, fontSize: 'clamp(1.75rem,7vw,4.2rem)', lineHeight: 1.08, letterSpacing: '-0.03em', fontWeight: 500, color: '#111827', marginBottom: 'clamp(40px,5vw,64px)' }}>
+        <h2 data-speed="0.95" style={{ paddingLeft: PX, paddingRight: PX, fontSize: 'clamp(1.6rem, 3.8vw, 3rem)', lineHeight: 1.15, letterSpacing: '-0.02em', fontWeight: 600, color: '#111827', marginBottom: 'clamp(40px,5vw,64px)' }}>
           AI Legal Workflows
         </h2>
         <div style={{ paddingLeft: PX, paddingRight: PX, display: 'grid', gridTemplateColumns: isMd ? 'repeat(3, 1fr)' : '1fr', gap: 'clamp(20px,2.5vw,32px)' }}>

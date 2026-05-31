@@ -2,14 +2,53 @@ import { useState, useRef, useEffect } from 'react'
 import { AIVerifiedIcon } from '../icons/AIVerifiedIcon'
 import { TextRollButton } from '../ui/TextRollButton'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const PX = 'clamp(20px,4vw,48px)'
 
-const LINKS: Record<string, string[]> = {
-  Product: ['Features', 'Workflow', 'Security', 'Pricing'],
-  Company: ['About', 'Blog', 'Careers', 'Press'],
-  Legal: ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'GDPR'],
-}
+const PRODUCT_LINKS = [
+  { label: 'Features', href: '#features' },
+  { label: 'Workflow', href: '#workflow' },
+  { label: 'Explore', to: '/explore' },
+  { label: 'Dashboard', to: '/dashboard' },
+]
+
+const RESOURCE_LINKS = [
+  { label: 'Documentation', href: '#' },
+  { label: 'GitHub', href: 'https://github.com' },
+  { label: 'Changelog', href: '#' },
+  { label: 'API Reference', href: '#' },
+]
+
+const TEAM = [
+  {
+    name: 'Shashwat Singh',
+    initials: 'SS',
+    avatarBg: '#dcfce7', // pastel green
+    avatarColor: '#166534',
+    linkedin: 'https://linkedin.com',
+    github: 'https://github.com',
+    email: 'shashwat@lexa.ai',
+  },
+  {
+    name: 'Satyarth Singh',
+    initials: 'SY',
+    avatarBg: '#ffe4e6', // pastel rose
+    avatarColor: '#9f1239',
+    linkedin: 'https://linkedin.com',
+    github: 'https://github.com/Satyarth5678',
+    email: 'satyarth@lexa.ai',
+  },
+  {
+    name: 'Shashwat Maurya',
+    initials: 'SM',
+    avatarBg: '#dbeafe', // pastel blue
+    avatarColor: '#1e40af',
+    linkedin: 'https://linkedin.com',
+    github: 'https://github.com',
+    email: 'maurya@lexa.ai',
+  },
+]
 
 /* Inline SVG social icons — no lucide dependency */
 function TwitterSVG() {
@@ -36,16 +75,81 @@ function GithubSVG() {
   )
 }
 
-function FooterLink({ label }: { label: string }) {
+function MailSVG() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M22 7l-10 7L2 7" />
+    </svg>
+  )
+}
+
+function FooterLink({ label, href, to }: { label: string; href?: string; to?: string }) {
   const [hovered, setHovered] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (to) {
+      e.preventDefault()
+      navigate(to)
+      window.scrollTo(0, 0)
+    } else if (href && href !== '#') {
+      if (href.startsWith('#')) {
+        e.preventDefault()
+        if (location.pathname !== '/') {
+          navigate('/' + href)
+        } else {
+          const target = document.querySelector(href)
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' })
+          }
+        }
+      }
+    }
+  }
+
   return (
     <a
-      href="#"
+      href={to ?? href ?? '#'}
+      onClick={handleClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ fontSize: 14, color: hovered ? '#111827' : '#6b7280', textDecoration: 'none', transition: 'color 200ms', display: 'block' }}
+      style={{
+        fontSize: 14,
+        color: hovered ? '#F26522' : '#6b7280',
+        textDecoration: 'none',
+        transition: 'color 200ms',
+        display: 'block',
+        cursor: 'pointer'
+      }}
     >
       {label}
+    </a>
+  )
+}
+
+function SocialIconLink({ href, type }: { href: string; type: 'linkedin' | 'github' | 'email' }) {
+  const [hovered, setHovered] = useState(false)
+  const hoverColor = type === 'linkedin' ? '#0077b5' : type === 'email' ? '#F26522' : '#111827'
+
+  return (
+    <a
+      href={type === 'email' ? `mailto:${href}` : href}
+      target={type === 'email' ? undefined : '_blank'}
+      rel={type === 'email' ? undefined : 'noopener noreferrer'}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        color: hovered ? hoverColor : '#9ca3af',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'color 200ms',
+        cursor: 'pointer',
+      }}
+    >
+      {type === 'linkedin' ? <LinkedInSVG /> : type === 'email' ? <MailSVG /> : <GithubSVG />}
     </a>
   )
 }
@@ -73,10 +177,72 @@ function SocialBtn({ children, href }: { children: React.ReactNode; href: string
   )
 }
 
-/**
- * Animates each word of a text string by sliding it up + fading in,
- * staggered per word. Triggered once when the element enters the viewport.
- */
+function TeamCard({ member }: { member: typeof TEAM[0] }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        padding: '14px 12px',
+        width: '100%',
+        minHeight: 140,
+        backgroundColor: hovered ? '#ffffff' : 'rgba(242, 101, 34, 0.04)',
+        border: `1px solid ${hovered ? '#F26522' : 'rgba(242, 101, 34, 0.15)'}`,
+        borderRadius: 12,
+        boxShadow: hovered ? '0 8px 20px rgba(242, 101, 34, 0.08)' : '0 2px 4px rgba(0,0,0,0.01)',
+        transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
+        transition: 'all 280ms cubic-bezier(0.25, 0.1, 0.25, 1)',
+        textAlign: 'center',
+        flexShrink: 0,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* Avatar */}
+      <div style={{
+        width: 32,
+        height: 32,
+        borderRadius: '50%',
+        backgroundColor: member.avatarBg,
+        color: member.avatarColor,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 11,
+        fontWeight: 700,
+        flexShrink: 0,
+      }}>
+        {member.initials}
+      </div>
+
+      {/* Name */}
+      <span style={{
+        fontSize: 12,
+        fontWeight: 600,
+        color: '#111827',
+        width: '100%',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}>
+        {member.name}
+      </span>
+
+      {/* Social Links — with mail */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
+        <SocialIconLink href={member.email} type="email" />
+        <SocialIconLink href={member.linkedin} type="linkedin" />
+        <SocialIconLink href={member.github} type="github" />
+      </div>
+    </div>
+  )
+}
+
 function AnimatedText({
   text,
   style,
@@ -94,34 +260,36 @@ function AnimatedText({
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true)
-          observer.unobserve(el)
-        }
+        setVisible(entry.isIntersecting)
       },
-      { threshold: 0.2, rootMargin: '0px 0px -20px 0px' },
+      { threshold: 0.5, rootMargin: '0px 0px -60px 0px' },
     )
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
 
-  const chars = Array.from(text)
+  const words = text.split(' ')
 
   return (
-    <p ref={ref} style={{ ...style, margin: 0, whiteSpace: 'pre-wrap' }}>
-      {chars.map((char, i) => (
-        <span
-          key={i}
-          style={{
-            display: 'inline-block',
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.9)',
-            transition: `opacity 250ms ease ${delay + i * 15}ms, transform 250ms cubic-bezier(0.25, 0.1, 0.25, 1) ${delay + i * 15}ms`,
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
+    <p ref={ref} style={{ ...style, margin: 0 }}>
+      {words.map((word, i) => (
+        <span key={i} style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'bottom' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              transform: visible ? 'translateY(0)' : 'translateY(110%)',
+              opacity: visible ? 1 : 0,
+              transition: `transform 480ms cubic-bezier(0.25, 0.1, 0.25, 1) ${delay + i * 55}ms, opacity 400ms ease ${delay + i * 55}ms`,
+            }}
+          >
+            {word}
+          </span>
         </span>
-      ))}
+      )).reduce<React.ReactNode[]>((acc, el, i) => {
+        if (i > 0) acc.push(' ')
+        acc.push(el)
+        return acc
+      }, [])}
     </p>
   )
 }
@@ -138,7 +306,6 @@ function FeedbackStrip() {
 
   return (
     <div
-      data-speed="0.85"
       style={{
         padding: 'clamp(24px,3vw,36px)',
         backgroundColor: '#111827',
@@ -212,27 +379,27 @@ export function Footer() {
 
   return (
     <footer id="contact" style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f3f4f6' }}>
-      <div style={{ maxWidth: 1440, margin: '0 auto', paddingLeft: PX, paddingRight: PX, paddingTop: 'clamp(48px,6vw,80px)', paddingBottom: 'clamp(40px,5vw,64px)' }}>
+      <div style={{ maxWidth: 1440, margin: '0 auto', paddingLeft: PX, paddingRight: PX, paddingTop: 'clamp(28px,3.5vw,42px)', paddingBottom: 20 }}>
 
-        {/* Top grid */}
+        {/* Top grid — 4 columns on desktop */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: isLg ? '2fr 1fr 1fr 1fr' : isMd ? '1fr 1fr' : '1fr',
-          gap: 'clamp(32px,4vw,64px)',
-          marginBottom: 'clamp(40px,5vw,64px)',
+          gridTemplateColumns: isLg ? '1.4fr 0.7fr 0.7fr 1fr 1fr 1fr' : isMd ? '1.2fr 1fr 1fr' : '1fr',
+          gap: isLg ? 'clamp(20px,2vw,28px)' : 'clamp(24px,3vw,36px)',
+          marginBottom: 20,
         }}>
           {/* Brand column */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <span style={{ color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: '-0.02em' }}>LX</span>
               </div>
               <span style={{ fontSize: 16, fontWeight: 600, color: '#111827' }}>Lexa AI</span>
             </div>
-            <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.65, maxWidth: 300, margin: 0 }}>
+            <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.65, maxWidth: 280, margin: 0 }}>
               AI-powered contract review and intelligent redlining for modern legal workflows.
             </p>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: 8, padding: '8px 12px', width: 'fit-content' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: 8, padding: '6px 12px', width: 'fit-content' }}>
               <AIVerifiedIcon style={{ width: 18, height: 18, color: '#E8704E' }} />
               <span style={{ fontSize: 12, fontWeight: 500, color: '#374151' }}>AI Verified</span>
               <span style={{ fontSize: 10, backgroundColor: '#111827', color: '#fff', borderRadius: 4, padding: '2px 6px' }}>Secure Platform</span>
@@ -244,13 +411,44 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
-          {Object.entries(LINKS).map(([group, items]) => (
-            <div key={group} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#111827', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{group}</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {items.map(item => <FooterLink key={item} label={item} />)}
-              </div>
+          {/* Product links column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#111827', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Product</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {PRODUCT_LINKS.map(item => (
+                <FooterLink key={item.label} label={item.label} href={item.href} to={item.to} />
+              ))}
+            </div>
+          </div>
+
+          {/* Resources column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#111827', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Resources</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {RESOURCE_LINKS.map(item => (
+                <FooterLink key={item.label} label={item.label} href={item.href} />
+              ))}
+            </div>
+          </div>
+
+          {/* Team cards — each gets its own grid column on desktop */}
+          {TEAM.map((member, i) => (
+            <div
+              key={member.name}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+                gridColumn: isLg ? 'auto' : (isMd && i === 0) ? 'span 3' : 'auto',
+              }}
+            >
+              {i === 0 && (
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#111827', letterSpacing: '0.06em', textTransform: 'uppercase' }}>The Team</span>
+              )}
+              {i > 0 && isLg && (
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'transparent', letterSpacing: '0.06em', textTransform: 'uppercase', pointerEvents: 'none', userSelect: 'none' }}>.</span>
+              )}
+              <TeamCard member={member} />
             </div>
           ))}
         </div>
@@ -261,7 +459,7 @@ export function Footer() {
 
       {/* Bottom bar */}
       <div style={{ borderTop: '1px solid #f3f4f6' }}>
-        <div style={{ maxWidth: 1440, margin: '0 auto', paddingLeft: PX, paddingRight: PX, paddingTop: 20, paddingBottom: 20, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ maxWidth: 1440, margin: '0 auto', paddingLeft: PX, paddingRight: PX, paddingTop: 12, paddingBottom: 12, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <span style={{ fontSize: 13, color: '#9ca3af' }}>© 2026 Lexa AI. All rights reserved.</span>
           <div style={{ display: 'flex', gap: 20 }}>
             {['Privacy', 'Terms', 'Cookies'].map(item => <FooterLink key={item} label={item} />)}

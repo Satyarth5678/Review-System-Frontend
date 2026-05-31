@@ -6,6 +6,11 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  scrollbar-width: none; /* Firefox — hide all scrollbars */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge — hide all scrollbars */
 }
 
 html {
@@ -20,11 +25,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
-  scrollbar-width: none; /* Firefox */
-}
-
-body::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
 }
 
 #root {
@@ -96,6 +96,16 @@ h1, h2, h3, h4, h5, h6, p {
 .card-delay-2 { animation-delay: 100ms; }
 .card-delay-3 { animation-delay: 150ms; }
 .card-delay-4 { animation-delay: 200ms; }
+
+/* Synchronized gentle float for card grids */
+@keyframes gentleFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.card-float-1 { animation: gentleFloat 6s ease-in-out infinite 0s; }
+.card-float-2 { animation: gentleFloat 6s ease-in-out infinite 0.8s; }
+.card-float-3 { animation: gentleFloat 6s ease-in-out infinite 1.6s; }
 
 /* Interactive Hover Lift & Smooth Shadows */
 .hover-lift {

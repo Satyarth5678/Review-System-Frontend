@@ -7,7 +7,7 @@ import { useLondonTime } from '../../hooks/useLondonTime'
 const NAV_ITEMS = [
   { label: 'Features', href: '#features' },
   { label: 'Workflow', href: '#workflow' },
-  { label: 'Security', href: '#security' },
+  { label: 'Contact Us', href: '#contact' },
   { label: 'Explore Platform', to: '/explore' }
 ]
 

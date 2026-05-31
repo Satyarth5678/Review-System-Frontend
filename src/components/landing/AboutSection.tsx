@@ -309,7 +309,7 @@ export function AboutSection() {
             const speeds = ['0.88', '0.93', '0.97']
             const lags = ['0.08', '0.14', '0.20']
             return (
-              <div key={f.tag} data-speed={speeds[i]} data-lag={lags[i]} style={{ position: 'relative' }}>
+              <div key={f.tag} data-speed={speeds[i]} data-lag={lags[i]} style={{ position: 'relative' }} className={`card-float-${i + 1}`}>
                 <FeatureCard {...f} index={i} />
               </div>
             )

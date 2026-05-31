@@ -4,6 +4,8 @@ import { Navbar } from '../navigation/Navbar'
 import { TextRollButton } from '../ui/TextRollButton'
 import { AIVerifiedIcon } from '../icons/AIVerifiedIcon'
 
+const ORANGE = '#F26522'
+
 export function HeroSection() {
   const [badgeHovered, setBadgeHovered] = useState(false)
   const navigate = useNavigate()
@@ -56,6 +58,14 @@ export function HeroSection() {
           10% { opacity: 0.65; }
           90% { opacity: 0.65; }
           100% { top: 100%; opacity: 0; }
+        }
+        @keyframes badgeShimmer {
+          0%   { left: -100%; }
+          100% { left: 200%; }
+        }
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%      { opacity: 0.5; transform: scale(0.85); }
         }
       `}</style>
 
@@ -177,36 +187,44 @@ export function HeroSection() {
             textAlign: 'center',
           }}
         >
-          {/* Label — slight lag */}
-          <p
+          {/* Pill label — styled like explore page "Interactive Deep Dive" */}
+          <div
             data-lag="0.15"
             style={{
-              fontSize: 13,
-              lineHeight: '14px',
-              color: '#111827',
-              letterSpacing: '0.05em',
               marginBottom: 'clamp(20px,3vw,32px)',
+              animation: 'heroBounceIn 700ms cubic-bezier(0.25,0.1,0.25,1) 0ms both',
             }}
           >
-            Lexa AI
-          </p>
+            <span style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.07em',
+              textTransform: 'uppercase',
+              backgroundColor: 'rgba(242,101,34,0.1)',
+              color: ORANGE,
+              borderRadius: 9999,
+              padding: '5px 14px',
+            }}>
+              Next-Generation Contract Intelligence
+            </span>
+          </div>
 
-          {/* Headline — word-by-word slide-up animation */}
+          {/* Headline — word-by-word slide-up animation, "intelligent redlining" in orange */}
           <h1
             data-speed="0.92"
             style={{
               fontSize: 'clamp(1.75rem,7vw,4.2rem)',
               lineHeight: 1.15,
               letterSpacing: '-0.03em',
-              fontWeight: 500,
+              fontWeight: 600,
               color: '#111827',
               margin: 0,
             }}
           >
             {[
-              'AI-powered contract review',
-              'and intelligent redlining',
-              'for modern legal workflows.',
+              { text: 'AI-powered contract review', orangeWords: [] as string[] },
+              { text: 'and intelligent redlining', orangeWords: ['intelligent', 'redlining'] },
+              { text: 'for modern legal workflows.', orangeWords: [] as string[] },
             ].map((line, lineIdx) => (
               <span
                 key={lineIdx}
@@ -216,13 +234,14 @@ export function HeroSection() {
                   paddingBottom: '0.12em', // prevents descender clipping
                 }}
               >
-                {line.split(' ').map((word, wordIdx, arr) => (
+                {line.text.split(' ').map((word, wordIdx, arr) => (
                   <span
                     key={wordIdx}
                     style={{
                       display: 'inline-block',
                       marginRight: wordIdx < arr.length - 1 ? '0.28em' : 0,
                       animation: `heroWordIn 700ms cubic-bezier(0.25,0.1,0.25,1) ${(lineIdx * 4 + wordIdx) * 75}ms both`,
+                      color: line.orangeWords.includes(word.replace(/[.,]/g, '')) ? ORANGE : undefined,
                     }}
                   >
                     {word}
@@ -233,8 +252,6 @@ export function HeroSection() {
           </h1>
 
           {/* CTA row — bounce in after headline finishes */}
-          {/* Each half is equal width so the seam between them sits exactly at left:50%
-              where the red line travels — giving equal spacing on both sides */}
           <div
             data-lag="0.2"
             style={{
@@ -262,21 +279,58 @@ export function HeroSection() {
               />
             </div>
 
-            {/* Right half — badge left-aligned so its left edge approaches center */}
+            {/* Right half — AI Verified badge with premium shimmer effect */}
             <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
               <div
                 onMouseEnter={() => setBadgeHovered(true)}
                 onMouseLeave={() => setBadgeHovered(false)}
                 style={{
+                  position: 'relative',
                   display: 'inline-flex', alignItems: 'center', gap: 10,
-                  backgroundColor: '#ffffff', borderRadius: 4, padding: '8px 12px',
-                  boxShadow: badgeHovered ? '0 4px 16px rgba(0,0,0,0.12)' : '0 2px 8px rgba(0,0,0,0.08)',
-                  transition: 'box-shadow 300ms', cursor: 'default',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
+                  borderRadius: 8,
+                  padding: '10px 16px',
+                  boxShadow: badgeHovered
+                    ? '0 8px 24px rgba(242,101,34,0.12), 0 2px 8px rgba(0,0,0,0.06)'
+                    : '0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
+                  border: `1px solid ${badgeHovered ? 'rgba(242,101,34,0.25)' : 'rgba(0,0,0,0.06)'}`,
+                  transition: 'all 300ms cubic-bezier(0.25,0.1,0.25,1)',
+                  cursor: 'default',
+                  overflow: 'hidden',
                 }}
               >
-                <AIVerifiedIcon style={{ width: 22, height: 22, color: '#E8704E' }} />
-                <span style={{ fontSize: 13, fontWeight: 500, color: '#111827', whiteSpace: 'nowrap' }}>AI Verified</span>
-                <span style={{ fontSize: 10, backgroundColor: '#111827', color: '#fff', borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap' }}>
+                {/* Shimmer sweep */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '-100%',
+                  width: '60%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)',
+                  animation: 'badgeShimmer 3s ease-in-out infinite',
+                  pointerEvents: 'none',
+                }} />
+                {/* Live pulse dot */}
+                <div style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  backgroundColor: '#22c55e',
+                  animation: 'livePulse 2s ease-in-out infinite',
+                  flexShrink: 0,
+                }} />
+                <AIVerifiedIcon style={{ width: 20, height: 20, color: '#E8704E' }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#111827', whiteSpace: 'nowrap' }}>AI Verified</span>
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  backgroundColor: '#111827',
+                  color: '#fff',
+                  borderRadius: 5,
+                  padding: '3px 8px',
+                  whiteSpace: 'nowrap',
+                  letterSpacing: '0.02em',
+                }}>
                   Secure Platform
                 </span>
               </div>

@@ -27,37 +27,6 @@ function useReveal(threshold = 0.15) {
   return { ref, visible }
 }
 
-/* ── Animated counter ── */
-function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
-  const [val, setVal] = useState(0)
-  const { ref, visible } = useReveal(0.3)
-  const [prevVisible, setPrevVisible] = useState(visible)
-
-  if (visible !== prevVisible) {
-    setPrevVisible(visible)
-    if (!visible) {
-      setVal(0)
-    }
-  }
-
-  useEffect(() => {
-    if (!visible) return
-    let start = 0
-    const step = Math.ceil(to / 60)
-    const id = setInterval(() => {
-      start += step
-      if (start >= to) { setVal(to); clearInterval(id) }
-      else setVal(start)
-    }, 16)
-    return () => clearInterval(id)
-  }, [visible, to])
-  return (
-    <span ref={ref} style={{ fontVariantNumeric: 'tabular-nums' }}>
-      {val}{suffix}
-    </span>
-  )
-}
-
 const PIPELINE_STEPS = [
   { icon: Upload,      label: 'Contract Upload',         desc: 'PDF, DOCX or TXT dropped via Upload API',          color: '#6366f1' },
   { icon: FileText,    label: 'File Validation',          desc: 'MIME type, size & format checks via File Service',  color: '#8b5cf6' },
@@ -84,46 +53,82 @@ function Pill({ label, accent = false }: { label: string; accent?: boolean }) {
 }
 
 function PipelineStep({
-  step, index, activeStep, completedSteps, isAllComplete, onClick,
+  step, index, activeStep, completedSteps, isAllComplete, hoveredStep, onClick, onHover, onLeave,
 }: {
   step: typeof PIPELINE_STEPS[0]
   index: number
   activeStep: number
   completedSteps: number[]
   isAllComplete: boolean
+  hoveredStep: number | null
   onClick: () => void
+  onHover: () => void
+  onLeave: () => void
 }) {
   const Icon = step.icon
   const isActive = activeStep === index && !isAllComplete
   const isDone = completedSteps.includes(index)
+  const isHovered = hoveredStep === index
+  // On hover, show as completed visually
+  const showComplete = isDone || isHovered
+
   return (
     <button
       onClick={onClick}
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
       style={{
         display: 'flex', alignItems: 'center', gap: 16, width: '100%',
         background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
         padding: '12px 16px', borderRadius: 12,
-        backgroundColor: isActive ? 'rgba(242,101,34,0.06)' : isDone ? 'rgba(34,197,94,0.02)' : 'transparent',
+        backgroundColor: isHovered
+          ? 'rgba(34,197,94,0.06)'
+          : isActive
+            ? 'rgba(242,101,34,0.06)'
+            : isDone
+              ? 'rgba(34,197,94,0.02)'
+              : 'transparent',
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: isHovered
+          ? '0 8px 20px rgba(0,0,0,0.08)'
+          : 'none',
         transition: `all 300ms ${ease}`,
       }}
     >
       <div style={{
         width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-        backgroundColor: isActive ? step.color : isDone ? '#22c55e' : '#f3f4f6',
+        backgroundColor: showComplete ? '#22c55e' : isActive ? step.color : '#f3f4f6',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         transition: `background-color 300ms ${ease}`,
         position: 'relative',
-        boxShadow: isActive ? `0 4px 12px ${step.color}40` : 'none',
+        boxShadow: isHovered
+          ? '0 4px 12px rgba(34,197,94,0.3)'
+          : isActive
+            ? `0 4px 12px ${step.color}40`
+            : 'none',
       }}>
-        {isDone ? (
+        {showComplete ? (
           <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>✓</span>
         ) : (
           <Icon size={14} color={isActive ? '#fff' : '#9ca3af'} />
         )}
       </div>
-      <div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: isActive ? DARK : isDone ? '#374151' : GRAY }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: showComplete ? '#16a34a' : isActive ? DARK : isDone ? '#374151' : GRAY }}>
           {String(index + 1).padStart(2, '0')} — {step.label}
+        </div>
+        {/* Show description on hover */}
+        <div style={{
+          fontSize: 12,
+          color: GRAY,
+          lineHeight: 1.5,
+          maxHeight: isHovered ? 40 : 0,
+          opacity: isHovered ? 1 : 0,
+          overflow: 'hidden',
+          transition: `max-height 300ms ${ease}, opacity 250ms ${ease}`,
+          marginTop: isHovered ? 4 : 0,
+        }}>
+          {step.desc}
         </div>
       </div>
     </button>
@@ -134,6 +139,7 @@ export function PipelineSection() {
   const [activeStep, setActiveStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [running, setRunning] = useState(false)
+  const [hoveredStep, setHoveredStep] = useState<number | null>(null)
   const width = useWindowWidth()
   const isLg = width >= 1024
 
@@ -173,13 +179,6 @@ export function PipelineSection() {
   const progress = completedSteps.length === PIPELINE_STEPS.length ? 100 : ((activeStep) / (PIPELINE_STEPS.length - 1)) * 100
   const isAllComplete = completedSteps.length === PIPELINE_STEPS.length && !running
 
-  const STATS = [
-    { value: 10, suffix: '', label: 'Processing Steps' },
-    { value: 4,  suffix: '', label: 'AI Modules' },
-    { value: 97, suffix: '%', label: 'Accuracy Rate' },
-    { value: 3,  suffix: 's', label: 'Avg. Analysis Time' },
-  ]
-
   return (
     <section id="pipeline" style={{
       backgroundColor: '#ffffff', padding: 'clamp(64px,8vw,120px) clamp(20px,4vw,48px)',
@@ -196,35 +195,9 @@ export function PipelineSection() {
           <h2 style={{ fontSize: 'clamp(1.6rem,3.6vw,3rem)', fontWeight: 500, letterSpacing: '-0.02em', color: DARK, margin: '0 0 12px' }}>
             10-step processing pipeline
           </h2>
-          <p style={{ fontSize: 16, color: GRAY, lineHeight: 1.6, maxWidth: 520, margin: '0 0 28px' }}>
+          <p style={{ fontSize: 16, color: GRAY, lineHeight: 1.6, maxWidth: 520, margin: 0 }}>
             Every contract flows through a deterministic chain — from raw bytes to structured legal intelligence.
           </p>
-
-          {/* Full-width Stats Card */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 'clamp(24px, 3vw, 40px)',
-            width: '100%',
-            backgroundColor: DARK,
-            color: '#fff',
-            borderRadius: 24,
-            padding: 'clamp(32px, 5vw, 56px) clamp(24px, 4vw, 48px)',
-            marginTop: 32,
-            boxShadow: '0 20px 40px rgba(17, 24, 39, 0.12)',
-            textAlign: 'center',
-          }}>
-            {STATS.map((stat, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 500, color: ORANGE, letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  <Counter to={stat.value} suffix={stat.suffix} />
-                </div>
-                <div style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.5)', fontWeight: 500 }}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isLg ? '1fr 1fr' : '1fr', gap: 'clamp(32px,4vw,56px)', alignItems: 'center' }}>
@@ -238,6 +211,7 @@ export function PipelineSection() {
                 activeStep={activeStep}
                 completedSteps={completedSteps}
                 isAllComplete={isAllComplete}
+                hoveredStep={hoveredStep}
                 onClick={() => {
                   reset()
                   setActiveStep(i)
@@ -247,6 +221,8 @@ export function PipelineSection() {
                     setCompletedSteps(Array.from({ length: i }, (_, k) => k))
                   }
                 }}
+                onHover={() => setHoveredStep(i)}
+                onLeave={() => setHoveredStep(null)}
               />
             ))}
             {/* Controls */}

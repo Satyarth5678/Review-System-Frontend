@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FileText, ShieldAlert, FileEdit, GitBranch } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
@@ -81,18 +81,35 @@ function Pill({ label, accent = false }: { label: string; accent?: boolean }) {
 export function AIModulesSection() {
   const [active, setActive] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
+  const [fadeKey, setFadeKey] = useState(0)
   const width = useWindowWidth()
   const isLg = width >= 1024
   const mod = AI_MODULES[active]
   const Icon = mod.icon
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Smoother auto-loop with pause on hover
   useEffect(() => {
-    if (isHovered) return
-    const id = setInterval(() => {
-      setActive(a => (a + 1) % AI_MODULES.length)
-    }, 4500)
-    return () => clearInterval(id)
+    if (isHovered) {
+      if (timerRef.current) clearInterval(timerRef.current)
+      return
+    }
+    timerRef.current = setInterval(() => {
+      setActive(a => {
+        const next = (a + 1) % AI_MODULES.length
+        setFadeKey(k => k + 1)
+        return next
+      })
+    }, 5500)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [isHovered])
+
+  const handleModuleClick = (i: number) => {
+    if (i !== active) {
+      setActive(i)
+      setFadeKey(k => k + 1)
+    }
+  }
 
   return (
     <section style={{
@@ -115,15 +132,20 @@ export function AIModulesSection() {
           </p>
         </div>
 
-        {/* Module tabs */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}>
+        {/* Module tabs — hovering a button switches the card */}
+        <div
+          style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 32 }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           {AI_MODULES.map((m, i) => {
             const MIcon = m.icon
             const isAct = active === i
             return (
               <button
                 key={m.id}
-                onClick={() => setActive(i)}
+                onClick={() => handleModuleClick(i)}
+                onMouseEnter={() => handleModuleClick(i)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '10px 18px', borderRadius: 9999, border: 'none', cursor: 'pointer',
@@ -151,8 +173,22 @@ export function AIModulesSection() {
           }}
         >
           <div style={{ display: 'grid', gridTemplateColumns: isLg ? '1fr 1fr' : '1fr', gap: 'clamp(32px,4vw,64px)', alignItems: 'center' }}>
-            {/* Left: description */}
-            <div key={`desc-${active}`} style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.5s ease-out' }}>
+            {/* Left: description — smooth crossfade */}
+            <div
+              key={`desc-${fadeKey}`}
+              style={{
+                display: 'flex', flexDirection: 'column', gap: 20,
+                opacity: 0,
+                transform: 'translateY(12px)',
+                animation: `moduleFadeIn 500ms ${ease} forwards`,
+              }}
+            >
+              <style>{`
+                @keyframes moduleFadeIn {
+                  from { opacity: 0; transform: translateY(12px); }
+                  to   { opacity: 1; transform: translateY(0); }
+                }
+              `}</style>
               <div style={{
                 width: 56, height: 56, borderRadius: 16, backgroundColor: mod.color,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -171,14 +207,19 @@ export function AIModulesSection() {
               </div>
             </div>
 
-            {/* Right: mock output */}
-            <div key={`code-${active}`} style={{
-              backgroundColor: DARK, borderRadius: 16, padding: '24px',
-              fontFamily: 'monospace', fontSize: 14,
-              border: `1px solid ${mod.color}30`,
-              boxShadow: `0 12px 32px ${mod.color}15`,
-              animation: 'fadeIn 0.5s ease-out 0.1s both'
-            }}>
+            {/* Right: mock output — smooth crossfade */}
+            <div
+              key={`code-${fadeKey}`}
+              style={{
+                backgroundColor: DARK, borderRadius: 16, padding: '24px',
+                fontFamily: 'monospace', fontSize: 14,
+                border: `1px solid ${mod.color}30`,
+                boxShadow: `0 12px 32px ${mod.color}15`,
+                opacity: 0,
+                transform: 'translateY(12px)',
+                animation: `moduleFadeIn 500ms ${ease} 80ms forwards`,
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#ef4444' }} />
                 <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: ORANGE }} />

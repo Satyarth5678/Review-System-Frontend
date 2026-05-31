@@ -5,6 +5,7 @@ import { HeroExplore } from '../components/explore/HeroExplore'
 import { PipelineSection } from '../components/explore/PipelineSection'
 import { TechStackSection } from '../components/explore/TechStackSection'
 import { AIModulesSection } from '../components/explore/AIModulesSection'
+import { StatsSection } from '../components/explore/StatsSection'
 import { ArchSection } from '../components/explore/ArchSection'
 import { CTASection } from '../components/explore/CTASection'
 
@@ -21,6 +22,7 @@ export function ExplorePlatformPage() {
       <PipelineSection />
       <TechStackSection />
       <AIModulesSection />
+      <StatsSection />
       <ArchSection />
       <CTASection />
       <Footer />

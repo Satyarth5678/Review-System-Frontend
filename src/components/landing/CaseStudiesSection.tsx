@@ -275,17 +275,17 @@ export function CaseStudiesSection() {
           AI Legal Workflows
         </h2>
         <div style={{ paddingLeft: PX, paddingRight: PX, display: 'grid', gridTemplateColumns: isMd ? 'repeat(3, 1fr)' : '1fr', gap: 'clamp(20px,2.5vw,32px)' }}>
-          <div data-speed="0.88" data-lag="0.08" style={{ position: 'relative' }}>
+          <div data-speed="0.88" data-lag="0.08" style={{ position: 'relative' }} className="card-float-1">
             <WorkflowCard number="01" title="Risk Detection" description="AI scans every clause and scores risk in real time." index={0}>
               <RiskDetectionCard />
             </WorkflowCard>
           </div>
-          <div data-speed="0.93" data-lag="0.14" style={{ position: 'relative' }}>
+          <div data-speed="0.93" data-lag="0.14" style={{ position: 'relative' }} className="card-float-2">
             <WorkflowCard number="02" title="Smart Redlining" description="Get negotiation-ready edits aligned to your playbook." index={1}>
               <RedliningCard />
             </WorkflowCard>
           </div>
-          <div data-speed="0.97" data-lag="0.20" style={{ position: 'relative' }}>
+          <div data-speed="0.97" data-lag="0.20" style={{ position: 'relative' }} className="card-float-3">
             <WorkflowCard number="03" title="PDF Export & Redline Apply" description="Rewrites risky clauses into legally sound language and exports a clean, downloadable PDF instantly." index={2}>
               <PDFExportCard />
             </WorkflowCard>

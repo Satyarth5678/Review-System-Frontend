@@ -1,6 +1,6 @@
 @echo off
 git add .
-git commit -m "ci: add GitHub Actions workflow to build and deploy to Pages"
+git commit -m "fix: replace PageTransition with stable FadeRoute, wrap ExplorePage in error boundary"
 git push origin explore
 git checkout main
 git merge explore

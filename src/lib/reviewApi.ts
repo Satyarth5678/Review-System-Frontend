@@ -41,20 +41,27 @@ function maybeParse(value: unknown): unknown {
 }
 
 function unwrapSection<T>(raw: unknown, label: string, warnings: string[]): T | null {
-  const section = asRecord(raw) as SectionResult
-  const response = asRecord(maybeParse(section.response))
+  if (!raw || typeof raw !== 'object') {
+    warnings.push(`${label} raw data was invalid or null.`)
+    return null
+  }
+
+  const section = asRecord(raw) as Record<string, any>
 
   if (section.success === false) {
-    warnings.push(`${label} failed.`)
+    warnings.push(`${label} failed: ${asString(section.error ?? section.detail, 'Unknown backend error')}`)
     return null
   }
 
-  if (response.success === false) {
-    warnings.push(`${label}: ${asString(response.error, 'The backend did not return usable data.')}`)
+  const responseObj = section.response !== undefined ? asRecord(maybeParse(section.response)) : section
+
+  if (responseObj.success === false) {
+    warnings.push(`${label}: ${asString(responseObj.error ?? responseObj.detail, 'The backend did not return usable data.')}`)
     return null
   }
 
-  const data = response.data ?? response
+  const data = responseObj.data ?? (section.data !== undefined ? section.data : responseObj)
+  
   if (!data || typeof data !== 'object') {
     warnings.push(`${label} data was missing.`)
     return null
@@ -158,16 +165,21 @@ export function normalizeAnalyzeResponse(raw: unknown): ReviewResult {
     warnings.push('Analyze request failed.')
   }
 
-  const classificationData = unwrapSection<unknown>(payload.classification, 'Classification', warnings)
-  const summaryData = unwrapSection<unknown>(payload.summary, 'Summary', warnings)
-  const riskData = unwrapSection<unknown>(payload.riskAnalysis ?? payload.risk_analysis, 'Risk analysis', warnings)
-  const suggestionsData = unwrapSection<unknown>(payload.suggestions, 'Suggestions', warnings)
+  const analysisObj = payload.analysis && typeof payload.analysis === 'object'
+    ? asRecord(payload.analysis)
+    : payload
+
+  const classificationData = unwrapSection<unknown>(analysisObj.classification, 'Classification', warnings)
+  const summaryData = unwrapSection<unknown>(analysisObj.summary, 'Summary', warnings)
+  const riskData = unwrapSection<unknown>(analysisObj.riskAnalysis ?? analysisObj.risk_analysis, 'Risk analysis', warnings)
+  const suggestionsData = unwrapSection<unknown>(analysisObj.suggestions, 'Suggestions', warnings)
 
   const riskResult = normalizeRisks(riskData)
   const suggestionResult = normalizeSuggestions(suggestionsData)
 
   return {
-    documentTextPreview: asString(payload.document_text_preview ?? payload.documentTextPreview, ''),
+    sessionId: asString(payload.sessionId ?? payload.session_id, ''),
+    documentTextPreview: asString(payload.document_text_preview ?? payload.documentTextPreview ?? payload.documentText, ''),
     classification: classificationData ? normalizeClassification(classificationData) : DEFAULT_CLASSIFICATION,
     summary: normalizeSummary(summaryData),
     risks: riskResult.risks,
@@ -202,4 +214,46 @@ export async function analyzeContract(file: File): Promise<ReviewResult> {
   }
 
   return normalizeAnalyzeResponse(await response.json())
+}
+
+export async function updateSessionText(sessionId: string, newText: string): Promise<{ success: boolean; currentText: string }> {
+  const response = await fetch(`${API_BASE_URL}/session/${sessionId}/text`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ newText }),
+  })
+
+  if (!response.ok) {
+    let detail = `Backend returned ${response.status}`
+    try {
+      const errorPayload = await response.json()
+      detail = asString(asRecord(errorPayload).detail, detail)
+    } catch {
+      // Keep status-based fallback
+    }
+    throw new Error(detail)
+  }
+
+  return await response.json()
+}
+
+export async function fetchSession(sessionId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/session/${sessionId}`, {
+    method: 'GET',
+  })
+
+  if (!response.ok) {
+    let detail = `Backend returned ${response.status}`
+    try {
+      const errorPayload = await response.json()
+      detail = asString(asRecord(errorPayload).detail, detail)
+    } catch {
+      // Keep status-based fallback
+    }
+    throw new Error(detail)
+  }
+
+  return await response.json()
 }

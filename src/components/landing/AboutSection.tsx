@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { TextRollButton } from '../ui/TextRollButton'
 import { ShieldAlert, FileEdit, BookOpen, AlertTriangle, CheckCircle, ChevronRight } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
+import { useScrollReveal } from '../../hooks/useScrollReveal'
 
 const PX = 'clamp(20px,4vw,48px)'
 
@@ -173,14 +174,19 @@ function FeatureCard({
   description,
   accent,
   bullets,
-}: (typeof FEATURES)[0]) {
+  index,
+}: (typeof FEATURES)[0] & { index: number }) {
   const [hovered, setHovered] = useState(false)
+  const [ref, revealed] = useScrollReveal()
 
   return (
     <div
+      ref={ref as any}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className={revealed ? `card-reveal card-delay-${(index % 4) + 1}` : ''}
       style={{
+        opacity: revealed ? 1 : 0,
         backgroundColor: hovered ? '#f9fafb' : '#ffffff',
         border: `1px solid ${hovered ? '#e5e7eb' : '#f3f4f6'}`,
         borderRadius: 20,
@@ -188,7 +194,7 @@ function FeatureCard({
         display: 'flex',
         flexDirection: 'column',
         gap: 20,
-        transition: 'background-color 300ms, border-color 300ms, transform 300ms, box-shadow 300ms',
+        transition: 'background-color 300ms, border-color 300ms, transform 300ms, box-shadow 300ms, opacity 400ms ease',
         transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
         boxShadow: hovered ? '0 20px 48px rgba(0,0,0,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
         cursor: 'default',
@@ -202,16 +208,16 @@ function FeatureCard({
           <Icon size={20} color={accent} strokeWidth={1.5} />
         </div>
       </div>
-      <h3 style={{ fontSize: 'clamp(16px,1.5vw,20px)', fontWeight: 600, color: '#111827', lineHeight: 1.3, letterSpacing: '-0.01em', margin: 0 }}>
+      <h3 style={{ fontSize: 'clamp(17px,1.6vw,22px)', fontWeight: 600, color: '#111827', lineHeight: 1.3, letterSpacing: '-0.01em', margin: 0 }}>
         {title}
       </h3>
-      <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.65, margin: 0 }}>{description}</p>
+      <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.65, margin: 0 }}>{description}</p>
       <div style={{ height: 1, backgroundColor: '#f3f4f6', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: hovered ? '100%' : '0%', backgroundColor: accent, transition: 'width 500ms cubic-bezier(0.25,0.1,0.25,1)' }} />
       </div>
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {bullets.map((b) => (
-          <li key={b} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: '#374151' }}>
+          <li key={b} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#374151' }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: accent, flexShrink: 0 }} />
             {b}
           </li>
@@ -230,7 +236,7 @@ export function AboutSection() {
   return (
     <section
       id="features"
-      style={{ backgroundColor: '#ffffff', paddingTop: 'clamp(64px,8vw,128px)', paddingBottom: 'clamp(64px,8vw,128px)', overflow: 'hidden' }}
+      style={{ backgroundColor: '#ffffff', padding: 'clamp(64px,8vw,120px) 0', overflow: 'hidden' }}
     >
       <div style={{ maxWidth: 1440, margin: '0 auto' }}>
 
@@ -270,15 +276,13 @@ export function AboutSection() {
             <div>
               <TextRollButton
                 label="Explore Platform"
-                bgColor="#F26522"
-                bgHoverColor="#e05a1a"
-                arrowBg="#ffffff"
-                arrowColor="#F26522"
-                arrowSize={28}
-                paddingLeft={20}
-                paddingRight={8}
+                bgColor="#111827"
+                bgHoverColor="#F26522"
+                hideArrow
+                paddingLeft={24}
+                paddingRight={24}
                 fontSize={13}
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/explore')}
               />
             </div>
           </div>
@@ -306,7 +310,7 @@ export function AboutSection() {
             const lags = ['0.08', '0.14', '0.20']
             return (
               <div key={f.tag} data-speed={speeds[i]} data-lag={lags[i]} style={{ position: 'relative' }}>
-                <FeatureCard {...f} />
+                <FeatureCard {...f} index={i} />
               </div>
             )
           })}

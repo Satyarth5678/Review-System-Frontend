@@ -1,3 +1,4 @@
+export type SuggestionDecision = 'accepted' | 'rejected'
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | string
 
 export interface ClassificationData {
@@ -38,6 +39,7 @@ export interface SuggestionItem {
 }
 
 export interface ReviewResult {
+  sessionId?: string
   documentTextPreview: string
   classification: ClassificationData
   summary: ContractSummary | null
@@ -50,3 +52,4 @@ export interface ReviewResult {
   overallRecommendationSummary: string
   warnings: string[]
 }
+

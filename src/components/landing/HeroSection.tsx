@@ -51,11 +51,11 @@ export function HeroSection() {
           80%  { transform: translateY(3px); }
           100% { transform: translateY(0); opacity: 1; }
         }
-        @keyframes redLineMove {
-          0%   { top: -10%; opacity: 0; }
-          15%  { opacity: 1; }
-          85%  { opacity: 1; }
-          100% { top: 110%; opacity: 0; }
+        @keyframes scanSweep {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 0.65; }
+          90% { opacity: 0.65; }
+          100% { top: 100%; opacity: 0; }
         }
       `}</style>
 
@@ -138,15 +138,17 @@ export function HeroSection() {
             opacity: 0.5,
           }} />
 
-          {/* Slow-moving vertical red line */}
+          {/* Horizontal scanner sweep line (behind text, low z-index) */}
           <div style={{
             position: 'absolute',
-            left: '50%',
-            width: 1.5,
-            height: '35%',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(220,38,38,0.55) 30%, rgba(220,38,38,0.75) 50%, rgba(220,38,38,0.55) 70%, transparent 100%)',
-            animation: 'redLineMove 6s ease-in-out infinite',
-            filter: 'blur(0.5px)',
+            left: 0,
+            right: 0,
+            height: 2,
+            background: 'linear-gradient(to right, transparent, var(--c-orange) 50%, transparent)',
+            boxShadow: '0 0 12px 2px var(--c-orange)',
+            animation: 'scanSweep 8s linear infinite',
+            pointerEvents: 'none',
+            zIndex: 2,
           }} />
         </div>
 
@@ -248,10 +250,10 @@ export function HeroSection() {
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <TextRollButton
                 label="Start Reviewing"
-                bgColor="#F26522"
-                bgHoverColor="#e05a1a"
+                bgColor="#111827"
+                bgHoverColor="#F26522"
                 arrowBg="#ffffff"
-                arrowColor="#F26522"
+                arrowColor="#111827"
                 arrowSize={30}
                 paddingLeft={20}
                 paddingRight={8}

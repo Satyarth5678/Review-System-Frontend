@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -16,7 +18,7 @@ body {
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
   scrollbar-width: none; /* Firefox */
 }
@@ -46,3 +48,100 @@ h1, h2, h3, h4, h5, h6, p {
   backdrop-filter: blur(50px);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
+
+/* --- Design System Overhaul & Micro-Animations --- */
+
+:root {
+  --c-orange: hsl(18, 80%, 57%);
+  --c-orange-hov: hsl(18, 80%, 51%);
+  --c-orange-dim: hsla(18, 80%, 57%, 0.08);
+  --c-orange-brd: hsla(18, 80%, 57%, 0.22);
+  --c-red: hsl(0, 58%, 50%);
+  --c-red-dim: hsla(0, 58%, 50%, 0.09);
+  --c-yellow: hsl(47, 82%, 42%);
+  --c-yellow-dim: hsla(47, 82%, 42%, 0.09);
+  --c-green: hsl(152, 58%, 43%);
+  --c-green-dim: hsla(152, 58%, 43%, 0.09);
+  --c-ink: hsl(220, 17%, 9%);
+  --c-ink2: hsl(227, 23%, 16%);
+  --c-muted: hsl(215, 16%, 47%);
+  --c-muted2: hsl(215, 25%, 68%);
+  --c-border: hsl(214, 32%, 91%);
+  --c-border2: hsl(210, 40%, 96%);
+  --c-surf: hsl(210, 40%, 98%);
+}
+
+/* Card Reveal / Scroll-based physics Jump animation */
+@keyframes cardJumpIn {
+  0% {
+    transform: translateY(24px) scale(0.97);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(-4px) scale(1.01);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.card-reveal {
+  animation: cardJumpIn 650ms cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+/* Staggered card transition classes */
+.card-delay-1 { animation-delay: 50ms; }
+.card-delay-2 { animation-delay: 100ms; }
+.card-delay-3 { animation-delay: 150ms; }
+.card-delay-4 { animation-delay: 200ms; }
+
+/* Interactive Hover Lift & Smooth Shadows */
+.hover-lift {
+  transition: transform 350ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 350ms cubic-bezier(0.25, 1, 0.5, 1), border-color 350ms ease;
+}
+.hover-lift:hover {
+  transform: translateY(-6px) scale(1.005);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+  border-color: rgba(232, 101, 58, 0.25) !important;
+}
+
+/* Card Hover Underline Expansion Line Effect */
+.hover-line-expand {
+  position: relative;
+}
+.hover-line-expand::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 2.5px;
+  background-color: var(--c-orange);
+  transition: width 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.hover-line-expand:hover::after {
+  width: 100%;
+}
+
+/* Architectural Sine-wave pulse effect */
+@keyframes archWaveGlow {
+  0%, 100% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 2px hsla(18, 80%, 57%, 0.4));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px hsla(18, 80%, 57%, 0.8));
+  }
+}
+
+/* Text pulse utility for typing indicators */
+@keyframes textBlink {
+  50% { opacity: 0; }
+}
+.cursor-blink {
+  animation: textBlink 1s step-end infinite;
+}
+

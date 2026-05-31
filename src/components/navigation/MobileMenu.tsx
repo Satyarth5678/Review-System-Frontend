@@ -1,10 +1,15 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { TextRollButton } from '../ui/TextRollButton'
 import { useLondonTime } from '../../hooks/useLondonTime'
 
-const NAV_LINKS = ['Features', 'Workflow', 'Security', 'Contact']
+const NAV_ITEMS = [
+  { label: 'Features', href: '#features' },
+  { label: 'Workflow', href: '#workflow' },
+  { label: 'Security', href: '#security' },
+  { label: 'Explore Platform', to: '/explore' }
+]
 
 interface Props {
   isOpen: boolean
@@ -14,6 +19,7 @@ interface Props {
 export function MobileMenu({ isOpen, onClose }: Props) {
   const time = useLondonTime()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
@@ -25,6 +31,20 @@ export function MobileMenu({ isOpen, onClose }: Props) {
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
+
+  const handleLinkClick = (e: React.MouseEvent, item: typeof NAV_ITEMS[0]) => {
+    onClose()
+    if (item.to) {
+      e.preventDefault()
+      navigate(item.to)
+      window.scrollTo(0, 0)
+    } else if (item.href) {
+      if (location.pathname !== '/') {
+        e.preventDefault()
+        navigate('/' + item.href)
+      }
+    }
+  }
 
   return (
     <>
@@ -62,7 +82,7 @@ export function MobileMenu({ isOpen, onClose }: Props) {
       >
         <div style={{ padding: 24 }}>
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', marginBottom: 32 }}>
             <span style={{ fontSize: 13, color: '#4b5563', backgroundColor: '#f3f4f6', borderRadius: 9999, padding: '6px 12px' }}>
               {time} in India
             </span>
@@ -82,17 +102,18 @@ export function MobileMenu({ isOpen, onClose }: Props) {
 
           {/* Nav links */}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 32 }}>
-            {NAV_LINKS.map((label) => (
+            {NAV_ITEMS.map((item) => (
               <a
-                key={label}
-                href={`#${label.toLowerCase()}`}
-                onClick={onClose}
+                key={item.label}
+                href={item.to ?? ('/' + item.href)}
+                onClick={(e) => handleLinkClick(e, item)}
                 style={{
                   fontSize: 28, lineHeight: '32px', fontWeight: 500,
                   color: '#111827', textDecoration: 'none', padding: '4px 0',
+                  fontFamily: "'Fraunces', serif"
                 }}
               >
-                {label}
+                {item.label}
               </a>
             ))}
           </nav>
@@ -101,7 +122,7 @@ export function MobileMenu({ isOpen, onClose }: Props) {
           <TextRollButton
             label="Launch Workspace"
             bgColor="#111827"
-            bgHoverColor="#374151"
+            bgHoverColor="var(--c-orange)"
             arrowBg="#ffffff"
             arrowColor="#111827"
             arrowSize={32}
@@ -119,3 +140,4 @@ export function MobileMenu({ isOpen, onClose }: Props) {
     </>
   )
 }
+

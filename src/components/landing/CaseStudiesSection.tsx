@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
+import { useScrollReveal } from '../../hooks/useScrollReveal'
 
 const PX = 'clamp(20px,4vw,48px)'
 
@@ -214,20 +215,25 @@ function PDFExportCard() {
   )
 }
 
-function WorkflowCard({ number, title, description, children }: {
-  number: string; title: string; description: string; children: ReactNode
+function WorkflowCard({ number, title, description, index, children }: {
+  number: string; title: string; description: string; index: number; children: ReactNode
 }) {
   const [hovered, setHovered] = useState(false)
+  const [ref, revealed] = useScrollReveal()
+
   return (
     <div
+      ref={ref as any}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className={revealed ? `card-reveal card-delay-${(index % 4) + 1}` : ''}
       style={{
+        opacity: revealed ? 1 : 0,
         borderRadius: 20,
         overflow: 'hidden',
         backgroundColor: '#111827',
         border: `1px solid ${hovered ? 'rgba(242,101,34,0.35)' : 'rgba(255,255,255,0.06)'}`,
-        transition: 'border-color 300ms, transform 300ms, box-shadow 300ms',
+        transition: 'border-color 300ms, transform 300ms, box-shadow 300ms, opacity 400ms ease',
         transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
         boxShadow: hovered ? '0 24px 56px rgba(0,0,0,0.35)' : '0 4px 16px rgba(0,0,0,0.2)',
         display: 'flex',
@@ -243,9 +249,9 @@ function WorkflowCard({ number, title, description, children }: {
       <div style={{ padding: '20px 24px 28px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: '#F26522', letterSpacing: '0.06em' }}>{number}</span>
-          <h3 style={{ fontSize: 15, fontWeight: 600, color: '#fff', margin: 0 }}>{title}</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#fff', margin: 0 }}>{title}</h3>
         </div>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, margin: 0 }}>{description}</p>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, margin: 0 }}>{description}</p>
       </div>
     </div>
   )
@@ -255,7 +261,7 @@ export function CaseStudiesSection() {
   const width = useWindowWidth()
   const isMd = width >= 768
   return (
-    <section id="workflow" style={{ backgroundColor: '#F5F5F5', paddingTop: 'clamp(64px,7vw,112px)', paddingBottom: 'clamp(64px,7vw,112px)' }}>
+    <section id="workflow" style={{ backgroundColor: '#F5F5F5', padding: 'clamp(64px,8vw,120px) 0' }}>
       <div style={{ maxWidth: 1440, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: PX, paddingRight: PX, marginBottom: 'clamp(24px,3vw,32px)' }}>
           <div style={{ width: 26, height: 26, borderRadius: '50%', backgroundColor: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -270,17 +276,17 @@ export function CaseStudiesSection() {
         </h2>
         <div style={{ paddingLeft: PX, paddingRight: PX, display: 'grid', gridTemplateColumns: isMd ? 'repeat(3, 1fr)' : '1fr', gap: 'clamp(20px,2.5vw,32px)' }}>
           <div data-speed="0.88" data-lag="0.08" style={{ position: 'relative' }}>
-            <WorkflowCard number="01" title="Risk Detection" description="AI scans every clause and scores risk in real time.">
+            <WorkflowCard number="01" title="Risk Detection" description="AI scans every clause and scores risk in real time." index={0}>
               <RiskDetectionCard />
             </WorkflowCard>
           </div>
           <div data-speed="0.93" data-lag="0.14" style={{ position: 'relative' }}>
-            <WorkflowCard number="02" title="Smart Redlining" description="Get negotiation-ready edits aligned to your playbook.">
+            <WorkflowCard number="02" title="Smart Redlining" description="Get negotiation-ready edits aligned to your playbook." index={1}>
               <RedliningCard />
             </WorkflowCard>
           </div>
           <div data-speed="0.97" data-lag="0.20" style={{ position: 'relative' }}>
-            <WorkflowCard number="03" title="PDF Export & Redline Apply" description="Rewrites risky clauses into legally sound language and exports a clean, downloadable PDF instantly.">
+            <WorkflowCard number="03" title="PDF Export & Redline Apply" description="Rewrites risky clauses into legally sound language and exports a clean, downloadable PDF instantly." index={2}>
               <PDFExportCard />
             </WorkflowCard>
           </div>

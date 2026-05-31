@@ -87,7 +87,7 @@ function App() {
     <PageTransition key={location.pathname}>
       <Routes location={location}>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/explore-platform" element={<ExplorePlatformPage />} />
+        <Route path="/explore" element={<ExplorePlatformPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
       </Routes>
     </PageTransition>

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { AIVerifiedIcon } from '../icons/AIVerifiedIcon'
 import { ArrowRight } from 'lucide-react'
-import { TextRollButton } from '../ui/TextRollButton'
 import { useWindowWidth } from '../../hooks/useWindowWidth'
 
 const PX = 'clamp(20px,4vw,48px)'
@@ -95,49 +94,48 @@ function AnimatedText({
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true)
-          observer.unobserve(el)
-        }
+        // Set visible when entering, reset when leaving
+        setVisible(entry.isIntersecting)
       },
-      { threshold: 0.2, rootMargin: '0px 0px -20px 0px' },
+      { threshold: 0.5, rootMargin: '0px 0px -60px 0px' },
     )
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
 
-  const chars = Array.from(text)
+  const words = text.split(' ')
 
   return (
-    <p ref={ref} style={{ ...style, margin: 0, whiteSpace: 'pre-wrap' }}>
-      {chars.map((char, i) => (
-        <span
-          key={i}
-          style={{
-            display: 'inline-block',
-            opacity: visible ? 1 : 0,
-            transform: visible ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.9)',
-            transition: `opacity 250ms ease ${delay + i * 15}ms, transform 250ms cubic-bezier(0.25, 0.1, 0.25, 1) ${delay + i * 15}ms`,
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
+    <p ref={ref} style={{ ...style, margin: 0 }}>
+      {words.map((word, i) => (
+        <span key={i} style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'bottom' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              transform: visible ? 'translateY(0)' : 'translateY(110%)',
+              opacity: visible ? 1 : 0,
+              transition: `transform 480ms cubic-bezier(0.25,0.1,0.25,1) ${delay + i * 55}ms, opacity 400ms ease ${delay + i * 55}ms`,
+            }}
+          >
+            {word}
+          </span>
         </span>
-      ))}
+      )).reduce<React.ReactNode[]>((acc, el, i) => {
+        if (i > 0) acc.push(' ')
+        acc.push(el)
+        return acc
+      }, [])}
     </p>
   )
 }
 
-function FeedbackStrip() {
-  const [feedback, setFeedback] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  const [btnHovered, setBtnHovered] = useState(false)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!feedback.trim()) return
-    setSubmitted(true)
-  }
-
+function NewsletterStrip({
+  emailHovered,
+  setEmailHovered,
+}: {
+  emailHovered: boolean
+  setEmailHovered: (v: boolean) => void
+}) {
   return (
     <div
       data-speed="0.85"
@@ -152,62 +150,60 @@ function FeedbackStrip() {
         gap: 20,
       }}
     >
-      <div style={{ overflow: 'hidden', flex: '1 1 300px' }}>
+      <div style={{ overflow: 'hidden' }}>
         <AnimatedText
-          text="Stay ahead of legal AI."
+          text="Stay ahead of legal AI"
           delay={0}
           style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 4 }}
         />
         <AnimatedText
-          text="Share your feedback, bug reports, or feature ideas with the team."
+          text="Get product updates and legal AI insights."
           delay={80}
           style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}
         />
       </div>
-      {submitted ? (
-        <div style={{ fontSize: 14, color: '#22c55e', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-          ✓ Thank you! Your feedback has been sent.
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-end' }}>
-          <input
-            type="text"
-            placeholder="Your message or suggestion..."
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            style={{
-              fontSize: 13,
-              color: '#fff',
-              backgroundColor: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 9999,
-              padding: '10px 18px',
-              outline: 'none',
-              width: '100%',
-              maxWidth: 320,
-            }}
-          />
-          <TextRollButton
-            label="Send Feedback"
-            type="submit"
-            bgColor="#ffffff"
-            bgHoverColor="#F26522"
-            textColor="#111827"
-            arrowBg="transparent"
-            arrowColor="#111827"
-            arrowSize={14}
-            paddingLeft={20}
-            paddingRight={8}
-            fontSize={13}
-            arrowNoTransform
-          />
-        </form>
-      )}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          style={{
+            fontSize: 13,
+            color: '#fff',
+            backgroundColor: 'rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: 9999,
+            padding: '10px 18px',
+            outline: 'none',
+            width: 220,
+          }}
+        />
+        <button
+          onMouseEnter={() => setEmailHovered(true)}
+          onMouseLeave={() => setEmailHovered(false)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: emailHovered ? '#F26522' : '#fff',
+            color: emailHovered ? '#fff' : '#111827',
+            border: 'none',
+            borderRadius: 9999,
+            padding: '10px 20px',
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: 'pointer',
+            transition: 'all 250ms',
+          }}
+        >
+          Subscribe <ArrowRight size={14} />
+        </button>
+      </div>
     </div>
   )
 }
 
 export function Footer() {
+  const [emailHovered, setEmailHovered] = useState(false)
   const width = useWindowWidth()
   const isLg = width >= 1024
   const isMd = width >= 768
@@ -257,8 +253,8 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Feedback strip */}
-        <FeedbackStrip />
+        {/* Newsletter strip */}
+        <NewsletterStrip emailHovered={emailHovered} setEmailHovered={setEmailHovered} />
       </div>
 
       {/* Bottom bar */}

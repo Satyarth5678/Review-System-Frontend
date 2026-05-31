@@ -15,6 +15,9 @@ interface Props {
   paddingRight?: number | string
   fontSize?: number
   fullWidth?: boolean
+  hideArrow?: boolean
+  arrowNoTransform?: boolean
+  type?: 'button' | 'submit' | 'reset'
   onClick?: () => void
 }
 
@@ -30,16 +33,22 @@ export function TextRollButton({
   paddingRight = 8,
   fontSize = 13,
   fullWidth = false,
+  hideArrow = false,
+  arrowNoTransform = false,
+  type = 'button',
   onClick,
 }: Props) {
   const [hovered, setHovered] = useState(false)
+  const [active, setActive] = useState(false)
 
   return (
     <button
-      type="button"
+      type={type}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => { setHovered(false); setActive(false) }}
+      onMouseDown={() => setActive(true)}
+      onMouseUp={() => setActive(false)}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -76,23 +85,25 @@ export function TextRollButton({
       </span>
 
       {/* Arrow circle */}
-      <span
-        style={{
-          width: arrowSize,
-          height: arrowSize,
-          borderRadius: '50%',
-          backgroundColor: arrowBg,
-          color: arrowColor,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          transform: hovered ? 'rotate(-45deg)' : 'rotate(0deg)',
-          transition: `transform 500ms ${EASE}`,
-        }}
-      >
-        <ArrowRight size={Math.round(arrowSize * 0.5)} />
-      </span>
+      {!hideArrow && (
+        <span
+          style={{
+            width: arrowSize,
+            height: arrowSize,
+            borderRadius: '50%',
+            backgroundColor: arrowBg,
+            color: arrowColor,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transform: arrowNoTransform ? 'none' : `${hovered ? 'rotate(-45deg)' : 'rotate(0deg)'} ${active ? 'scale(0.85)' : 'scale(1)'}`,
+            transition: `transform 400ms ${EASE}`,
+          }}
+        >
+          <ArrowRight size={Math.round(arrowSize * 0.5)} />
+        </span>
+      )}
     </button>
   )
 }

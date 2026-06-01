@@ -14,6 +14,7 @@ import { useEffect } from 'react'
 interface ElementState {
   baseTop: number
   lagY: number
+  lagVelocity?: number
 }
 
 export function useSmoothScroll() {
@@ -26,6 +27,7 @@ export function useSmoothScroll() {
         stateMap.set(el, {
           baseTop: rect.top + window.scrollY,
           lagY: window.scrollY,
+          lagVelocity: 0,
         })
       }
       return stateMap.get(el)!
@@ -37,42 +39,63 @@ export function useSmoothScroll() {
       const scrollY = window.scrollY
       const viewH = window.innerHeight
 
-      // --- data-speed ---
-      document.querySelectorAll<HTMLElement>('[data-speed]').forEach(el => {
+      // Process both speed and lag together on matching elements to prevent transform overwrites
+      document.querySelectorAll<HTMLElement>('[data-speed],[data-lag]').forEach(el => {
         const speedAttr = el.getAttribute('data-speed')
+        const lagAttr = el.getAttribute('data-lag')
         const state = getState(el)
-        const elH = el.offsetHeight
-        const elCenterBase = state.baseTop + elH / 2
-        const viewCenter = scrollY + viewH / 2
-        const dist = viewCenter - elCenterBase
 
-        if (speedAttr === 'auto') {
-          const parent = el.parentElement
-          if (!parent) return
-          const maxMove = el.offsetHeight - parent.offsetHeight
-          if (maxMove <= 0) return
-          const parentCenterBase = (parent.getBoundingClientRect().top + scrollY) + parent.offsetHeight / 2
-          const parentDist = viewCenter - parentCenterBase
-          const travelRange = viewH / 2 + parent.offsetHeight / 2
-          const ratio = Math.max(-1, Math.min(1, parentDist / travelRange))
-          el.style.transform = `translateY(${ratio * maxMove * 0.5}px)`
-        } else {
-          const speed = parseFloat(speedAttr ?? '1')
-          const offset = dist * (1 - speed)
-          el.style.transform = `translateY(${offset}px)`
+        let speedOffset = 0
+        if (speedAttr !== null) {
+          const elH = el.offsetHeight
+          const elCenterBase = state.baseTop + elH / 2
+          const viewCenter = scrollY + viewH / 2
+          const dist = viewCenter - elCenterBase
+
+          if (speedAttr === 'auto') {
+            const parent = el.parentElement
+            if (parent) {
+              const maxMove = el.offsetHeight - parent.offsetHeight
+              if (maxMove > 0) {
+                const parentCenterBase = (parent.getBoundingClientRect().top + scrollY) + parent.offsetHeight / 2
+                const parentDist = viewCenter - parentCenterBase
+                const travelRange = viewH / 2 + parent.offsetHeight / 2
+                const ratio = Math.max(-1, Math.min(1, parentDist / travelRange))
+                speedOffset = ratio * maxMove * 0.5
+              }
+            }
+          } else {
+            const speed = parseFloat(speedAttr ?? '1')
+            speedOffset = dist * (1 - speed)
+          }
         }
-        el.style.willChange = 'transform'
-      })
 
-      // --- data-lag ---
-      document.querySelectorAll<HTMLElement>('[data-lag]').forEach(el => {
-        const lag = parseFloat(el.getAttribute('data-lag') ?? '0')
-        const state = getState(el)
-        // lerp toward current scroll
-        const factor = Math.max(0.02, Math.min(0.98, 1 - lag * 5))
-        state.lagY += (scrollY - state.lagY) * factor
-        const diff = scrollY - state.lagY
-        el.style.transform = `translateY(${diff * 0.12}px)`
+        let lagOffset = 0
+        if (lagAttr !== null) {
+          const lag = parseFloat(lagAttr ?? '0')
+          
+          // Enhanced Spring-Damper physics:
+          // Slower spring (lower stiffness) & higher multiplier for higher lag value to preserve synchronization.
+          // Card 1 (lag=0.08) -> stiffness ~0.186, damping ~0.81, multiplier ~0.42
+          // Card 2 (lag=0.14) -> stiffness ~0.138, damping ~0.78, multiplier ~0.51
+          // Card 3 (lag=0.20) -> stiffness ~0.090, damping ~0.75, multiplier ~0.60
+          const stiffness = Math.max(0.04, 0.25 - lag * 0.8)
+          const damping = Math.max(0.6, 0.85 - lag * 0.5)
+          const multiplier = 0.3 + lag * 1.5
+
+          if (state.lagVelocity === undefined) {
+            state.lagVelocity = 0
+          }
+
+          const force = (scrollY - state.lagY) * stiffness
+          state.lagVelocity = (state.lagVelocity + force) * damping
+          state.lagY += state.lagVelocity
+
+          const diff = scrollY - state.lagY
+          lagOffset = diff * multiplier
+        }
+
+        el.style.transform = `translateY(${speedOffset + lagOffset}px)`
         el.style.willChange = 'transform'
       })
 

@@ -36,7 +36,7 @@ const PROCESSING_STEPS = [
   },
 ]
 
-const STEP_INTERVAL_MS = 3000
+const STEP_INTERVAL_MS = 35000
 
 interface ProcessingPanelProps {
   isAnalyzing: boolean
@@ -82,7 +82,6 @@ export function ProcessingPanel({ isAnalyzing, result, error, onRetry }: Process
   }, [isAnalyzing])
 
   const allComplete = Boolean(result) && !isAnalyzing
-
   return (
     <section style={{
       backgroundColor: colors.white,

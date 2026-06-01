@@ -211,7 +211,8 @@ async function extractErrorDetail(response: Response): Promise<string> {
   let detail = `Backend returned ${response.status}`
   try {
     const errorPayload = await response.json()
-    detail = asString(asRecord(errorPayload).detail, detail)
+    console.warn('[Lexa API Response Error Payload]', errorPayload)
+    detail = asString(asRecord(errorPayload).detail || asRecord(errorPayload).error, detail)
   } catch {
     // Keep the status-based fallback.
   }
@@ -221,10 +222,18 @@ async function extractErrorDetail(response: Response): Promise<string> {
 async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers)
   headers.set('ngrok-skip-browser-warning', 'true')
-  return fetch(url, {
-    ...init,
-    headers,
-  })
+  console.log(`[Lexa API Request] ${init?.method ?? 'GET'} ${url}`, init?.body ? 'with body' : '')
+  try {
+    const res = await fetch(url, {
+      ...init,
+      headers,
+    })
+    console.log(`[Lexa API Response] ${init?.method ?? 'GET'} ${url} -> Status: ${res.status}`)
+    return res
+  } catch (err) {
+    console.error(`[Lexa API Network Error] ${init?.method ?? 'GET'} ${url} failed:`, err)
+    throw err
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -272,7 +281,9 @@ export async function analyzeContract(file: File): Promise<ReviewResult> {
     throw new Error(await extractErrorDetail(response))
   }
 
-  return normalizeAnalyzeResponse(await response.json())
+  const rawJson = await response.json()
+  console.log('[Lexa API] Raw analyze response payload:', rawJson)
+  return normalizeAnalyzeResponse(rawJson)
 }
 
 /** PUT /session/{id}/text — Manual text update + version snapshot */

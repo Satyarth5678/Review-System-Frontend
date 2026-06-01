@@ -97,9 +97,19 @@ interface RedlinePanelProps {
   versions: VersionSnapshot[]
   onAcceptRedline: (redlineId: string) => void
   onRollback: () => void
+  isProcessingAction?: boolean
 }
 
-export function RedlinePanel({ result, decisions, onDecision, redlines, versions, onAcceptRedline, onRollback }: RedlinePanelProps) {
+export function RedlinePanel({
+  result,
+  decisions,
+  onDecision,
+  redlines,
+  versions,
+  onAcceptRedline,
+  onRollback,
+  isProcessingAction = false,
+}: RedlinePanelProps) {
   const pendingRedlines = redlines.filter((r) => r.status === 'pending')
   const acceptedRedlines = redlines.filter((r) => r.status === 'accepted')
 
@@ -173,13 +183,14 @@ export function RedlinePanel({ result, decisions, onDecision, redlines, versions
                 <button
                   type="button"
                   onClick={() => onAcceptRedline(redline.redlineId)}
+                  disabled={isProcessingAction}
                   style={{
                     border: 'none',
                     borderRadius: 999,
                     padding: '10px 20px',
-                    backgroundColor: colors.dark,
+                    backgroundColor: isProcessingAction ? '#d1d5db' : colors.dark,
                     color: colors.white,
-                    cursor: 'pointer',
+                    cursor: isProcessingAction ? 'wait' : 'pointer',
                     fontSize: 13,
                     fontWeight: 700,
                     display: 'inline-flex',
@@ -187,10 +198,10 @@ export function RedlinePanel({ result, decisions, onDecision, redlines, versions
                     gap: 8,
                     transition: 'all 150ms ease',
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.orange }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.dark }}
+                  onMouseEnter={(e) => { if (!isProcessingAction) e.currentTarget.style.backgroundColor = colors.orange }}
+                  onMouseLeave={(e) => { if (!isProcessingAction) e.currentTarget.style.backgroundColor = colors.dark }}
                 >
-                  <Check size={14} /> Apply to contract
+                  <Check size={14} /> {isProcessingAction ? 'Applying...' : 'Apply to contract'}
                 </button>
               </div>
             </div>
@@ -222,14 +233,14 @@ export function RedlinePanel({ result, decisions, onDecision, redlines, versions
         <button
           type="button"
           onClick={onRollback}
-          disabled={versions.length === 0}
+          disabled={versions.length === 0 || isProcessingAction}
           style={{
             border: '1.5px solid #e5e7eb',
             borderRadius: 999,
             padding: '8px 16px',
-            backgroundColor: versions.length > 0 ? colors.white : '#f9fafb',
-            color: versions.length > 0 ? colors.dark : '#9ca3af',
-            cursor: versions.length > 0 ? 'pointer' : 'not-allowed',
+            backgroundColor: (versions.length > 0 && !isProcessingAction) ? colors.white : '#f9fafb',
+            color: (versions.length > 0 && !isProcessingAction) ? colors.dark : '#9ca3af',
+            cursor: (versions.length > 0 && !isProcessingAction) ? 'pointer' : 'not-allowed',
             fontSize: 13,
             fontWeight: 700,
             display: 'inline-flex',
@@ -238,17 +249,17 @@ export function RedlinePanel({ result, decisions, onDecision, redlines, versions
             transition: 'all 150ms ease',
           }}
           onMouseEnter={(e) => {
-            if (versions.length > 0) {
+            if (versions.length > 0 && !isProcessingAction) {
               e.currentTarget.style.borderColor = colors.orange
               e.currentTarget.style.color = colors.orange
             }
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.borderColor = '#e5e7eb'
-            e.currentTarget.style.color = versions.length > 0 ? colors.dark : '#9ca3af'
+            e.currentTarget.style.color = (versions.length > 0 && !isProcessingAction) ? colors.dark : '#9ca3af'
           }}
         >
-          <RotateCcw size={13} /> Undo last change
+          <RotateCcw size={13} /> {isProcessingAction ? 'Undoing...' : 'Undo last change'}
         </button>
       </div>
 
@@ -336,15 +347,15 @@ export function RedlinePanel({ result, decisions, onDecision, redlines, versions
                     <button
                       type="button"
                       onClick={() => onDecision(index, 'accepted')}
-                      disabled={!hasRedlineData}
+                      disabled={!hasRedlineData || isProcessingAction}
                       title={hasRedlineData ? 'Propose this change as a pending redline' : 'No anchor text available for this suggestion'}
                       style={{
                         border: 'none',
                         borderRadius: 999,
                         padding: '10px 18px',
-                        backgroundColor: hasRedlineData ? colors.dark : '#d1d5db',
+                        backgroundColor: (hasRedlineData && !isProcessingAction) ? colors.dark : '#d1d5db',
                         color: colors.white,
-                        cursor: hasRedlineData ? 'pointer' : 'not-allowed',
+                        cursor: (hasRedlineData && !isProcessingAction) ? 'pointer' : 'not-allowed',
                         fontSize: 13,
                         fontWeight: 700,
                         display: 'inline-flex',
@@ -352,21 +363,22 @@ export function RedlinePanel({ result, decisions, onDecision, redlines, versions
                         gap: 8,
                         transition: 'all 150ms ease',
                       }}
-                      onMouseEnter={(e) => { if (hasRedlineData) e.currentTarget.style.backgroundColor = colors.orange }}
-                      onMouseLeave={(e) => { if (hasRedlineData) e.currentTarget.style.backgroundColor = colors.dark }}
+                      onMouseEnter={(e) => { if (hasRedlineData && !isProcessingAction) e.currentTarget.style.backgroundColor = colors.orange }}
+                      onMouseLeave={(e) => { if (hasRedlineData && !isProcessingAction) e.currentTarget.style.backgroundColor = colors.dark }}
                     >
                       <Check size={14} /> Propose redline
                     </button>
                     <button
                       type="button"
                       onClick={() => onDecision(index, 'rejected')}
+                      disabled={isProcessingAction}
                       style={{
                         border: '1.5px solid #e5e7eb',
                         borderRadius: 999,
                         padding: '10px 18px',
-                        backgroundColor: colors.white,
-                        color: colors.dark,
-                        cursor: 'pointer',
+                        backgroundColor: isProcessingAction ? '#f9fafb' : colors.white,
+                        color: isProcessingAction ? '#9ca3af' : colors.dark,
+                        cursor: isProcessingAction ? 'not-allowed' : 'pointer',
                         fontSize: 13,
                         fontWeight: 700,
                         display: 'inline-flex',
@@ -374,12 +386,16 @@ export function RedlinePanel({ result, decisions, onDecision, redlines, versions
                         transition: 'all 150ms ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = colors.orange
-                        e.currentTarget.style.color = colors.orange
+                        if (!isProcessingAction) {
+                          e.currentTarget.style.borderColor = colors.orange
+                          e.currentTarget.style.color = colors.orange
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#e5e7eb'
-                        e.currentTarget.style.color = colors.dark
+                        if (!isProcessingAction) {
+                          e.currentTarget.style.borderColor = '#e5e7eb'
+                          e.currentTarget.style.color = colors.dark
+                        }
                       }}
                     >
                       <X size={14} /> Dismiss

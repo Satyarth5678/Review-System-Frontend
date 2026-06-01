@@ -100,6 +100,8 @@ export function DashboardPage() {
   const [redlines, setRedlines] = useState<RedlineItem[]>([])
   const [versions, setVersions] = useState<VersionSnapshot[]>([])
 
+  const [isProcessingAction, setIsProcessingAction] = useState(false)
+
   const selectFile = (selected: File) => {
     if (!isAcceptedFile(selected)) {
       setError('Unsupported file type. Please upload a PDF, DOCX, or TXT contract.')
@@ -131,6 +133,7 @@ export function DashboardPage() {
     }
   }
 
+  // ---------------------------------------------------------------------------
   // ---------------------------------------------------------------------------
   // Upload + Analyze
   // ---------------------------------------------------------------------------
@@ -175,6 +178,7 @@ export function DashboardPage() {
   // Suggestion Accept/Reject — two-step: propose patch on backend first
   // ---------------------------------------------------------------------------
   const setSuggestionDecision = async (index: number, decision: SuggestionDecision) => {
+    if (isProcessingAction) return
     setDecisions((current) => ({ ...current, [index]: decision }))
 
     if (decision === 'accepted' && result && sessionId) {
@@ -191,6 +195,7 @@ export function DashboardPage() {
         return
       }
 
+      setIsProcessingAction(true)
       try {
         await proposePatch(sessionId, {
           anchorText: hasAnchor ? suggestion.anchorText : undefined,
@@ -208,6 +213,8 @@ export function DashboardPage() {
           delete updated[index]
           return updated
         })
+      } finally {
+        setIsProcessingAction(false)
       }
     }
   }
@@ -216,13 +223,16 @@ export function DashboardPage() {
   // Accept a pending redline (apply it to the contract)
   // ---------------------------------------------------------------------------
   const handleAcceptRedline = async (redlineId: string) => {
-    if (!sessionId) return
+    if (!sessionId || isProcessingAction) return
+    setIsProcessingAction(true)
     try {
       const response = await acceptRedline(sessionId, redlineId)
       setCurrentText(response.currentText)
       await refreshSession()
     } catch (err) {
       console.error('Failed to accept redline:', err)
+    } finally {
+      setIsProcessingAction(false)
     }
   }
 
@@ -230,13 +240,16 @@ export function DashboardPage() {
   // Rollback to previous version
   // ---------------------------------------------------------------------------
   const handleRollback = async () => {
-    if (!sessionId) return
+    if (!sessionId || isProcessingAction) return
+    setIsProcessingAction(true)
     try {
       const response = await rollbackSession(sessionId)
       setCurrentText(response.currentText)
       await refreshSession()
     } catch (err) {
       console.error('Failed to rollback:', err)
+    } finally {
+      setIsProcessingAction(false)
     }
   }
 
@@ -244,13 +257,16 @@ export function DashboardPage() {
   // Manual text update from OverviewPanel edit mode
   // ---------------------------------------------------------------------------
   const handleTextUpdate = async (newText: string) => {
-    if (!sessionId) return
+    if (!sessionId || isProcessingAction) return
+    setIsProcessingAction(true)
     try {
       await updateSessionText(sessionId, newText)
       setCurrentText(newText)
       await refreshSession()
     } catch (err) {
       console.error('Failed to update text:', err)
+    } finally {
+      setIsProcessingAction(false)
     }
   }
 
@@ -300,6 +316,7 @@ export function DashboardPage() {
           versions={versions}
           onAcceptRedline={handleAcceptRedline}
           onRollback={handleRollback}
+          isProcessingAction={isProcessingAction}
         />
       )
     }

@@ -218,6 +218,15 @@ async function extractErrorDetail(response: Response): Promise<string> {
   return detail
 }
 
+async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  const headers = new Headers(init?.headers)
+  headers.set('ngrok-skip-browser-warning', 'true')
+  return fetch(url, {
+    ...init,
+    headers,
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Redline normalization helper
 // ---------------------------------------------------------------------------
@@ -254,7 +263,7 @@ export async function analyzeContract(file: File): Promise<ReviewResult> {
   const formData = new FormData()
   formData.append('file', file)
 
-  const response = await fetch(`${API_BASE_URL}/analyze`, {
+  const response = await apiFetch(`${API_BASE_URL}/analyze`, {
     method: 'POST',
     body: formData,
   })
@@ -268,7 +277,7 @@ export async function analyzeContract(file: File): Promise<ReviewResult> {
 
 /** PUT /session/{id}/text — Manual text update + version snapshot */
 export async function updateSessionText(sessionId: string, newText: string): Promise<{ success: boolean; currentText: string; versions: number }> {
-  const response = await fetch(`${API_BASE_URL}/session/${sessionId}/text`, {
+  const response = await apiFetch(`${API_BASE_URL}/session/${sessionId}/text`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ newText }),
@@ -283,7 +292,7 @@ export async function updateSessionText(sessionId: string, newText: string): Pro
 
 /** GET /session/{id} — Fetch full session state */
 export async function fetchSessionData(sessionId: string): Promise<SessionData> {
-  const response = await fetch(`${API_BASE_URL}/session/${sessionId}`, {
+  const response = await apiFetch(`${API_BASE_URL}/session/${sessionId}`, {
     method: 'GET',
   })
 
@@ -307,7 +316,7 @@ export async function proposePatch(
   sessionId: string,
   patch: { anchorText?: string; insertionAnchor?: string; replacementText: string; reason?: string }
 ): Promise<{ success: boolean; redlineId: string; currentText: string }> {
-  const response = await fetch(`${API_BASE_URL}/session/${sessionId}/patch`, {
+  const response = await apiFetch(`${API_BASE_URL}/session/${sessionId}/patch`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -330,7 +339,7 @@ export async function acceptRedline(
   sessionId: string,
   redlineId: string
 ): Promise<{ success: boolean; redlineId: string; status: string; currentText: string }> {
-  const response = await fetch(`${API_BASE_URL}/session/${sessionId}/redline/${redlineId}/accept`, {
+  const response = await apiFetch(`${API_BASE_URL}/session/${sessionId}/redline/${redlineId}/accept`, {
     method: 'POST',
   })
 
@@ -345,7 +354,7 @@ export async function acceptRedline(
 export async function rollbackSession(
   sessionId: string
 ): Promise<{ success: boolean; currentText: string; remainingVersions: number }> {
-  const response = await fetch(`${API_BASE_URL}/session/${sessionId}/rollback`, {
+  const response = await apiFetch(`${API_BASE_URL}/session/${sessionId}/rollback`, {
     method: 'POST',
   })
 

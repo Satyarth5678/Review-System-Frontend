@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { Edit3, Save, X } from 'lucide-react'
 import type { ReviewResult } from '../../types/review'
 
 const colors = {
@@ -45,10 +47,39 @@ function InfoLine({ label, value }: { label: string; value: string }) {
 interface OverviewPanelProps {
   result: ReviewResult
   currentText: string
+  sessionId?: string | null
+  redlineCount?: number
+  versionCount?: number
+  onTextUpdate?: (newText: string) => void
 }
 
-export function OverviewPanel({ result, currentText }: OverviewPanelProps) {
+export function OverviewPanel({ result, currentText, sessionId, redlineCount = 0, versionCount = 0, onTextUpdate }: OverviewPanelProps) {
   const tone = severityTone(result.overallRiskLevel)
+  const [editing, setEditing] = useState(false)
+  const [editText, setEditText] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const startEditing = () => {
+    setEditText(currentText || result.documentTextPreview || '')
+    setEditing(true)
+  }
+
+  const cancelEditing = () => {
+    setEditing(false)
+    setEditText('')
+  }
+
+  const saveEdits = async () => {
+    if (!onTextUpdate) return
+    setSaving(true)
+    try {
+      await onTextUpdate(editText)
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <section style={{ display: 'grid', gap: 18 }}>
       <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
@@ -60,23 +91,130 @@ export function OverviewPanel({ result, currentText }: OverviewPanelProps) {
 
       <div className="overview-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(280px, 0.8fr)', gap: 18 }}>
         <div style={{ ...panelStyle, padding: 24 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: colors.orange, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Contract preview</div>
-          <pre style={{
-            marginTop: 16,
-            whiteSpace: 'pre-wrap',
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-            color: '#374151',
-            fontSize: 13,
-            lineHeight: 1.65,
-            maxHeight: 450,
-            overflow: 'auto',
-            backgroundColor: '#fafafa',
-            padding: 18,
-            borderRadius: 12,
-            border: '1px solid #e5e7eb'
-          }}>
-            {currentText || result.documentTextPreview || 'No preview returned by backend.'}
-          </pre>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: colors.orange, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              {editing ? 'Edit contract text' : 'Contract preview'}
+            </div>
+            {sessionId && onTextUpdate ? (
+              editing ? (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={saveEdits}
+                    disabled={saving}
+                    style={{
+                      border: 'none',
+                      borderRadius: 999,
+                      padding: '6px 14px',
+                      backgroundColor: colors.dark,
+                      color: colors.white,
+                      cursor: saving ? 'wait' : 'pointer',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      transition: 'all 150ms ease',
+                    }}
+                    onMouseEnter={(e) => { if (!saving) e.currentTarget.style.backgroundColor = colors.orange }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.dark }}
+                  >
+                    <Save size={12} /> {saving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    style={{
+                      border: '1.5px solid #e5e7eb',
+                      borderRadius: 999,
+                      padding: '6px 14px',
+                      backgroundColor: colors.white,
+                      color: colors.dark,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      transition: 'all 150ms ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = colors.orange
+                      e.currentTarget.style.color = colors.orange
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb'
+                      e.currentTarget.style.color = colors.dark
+                    }}
+                  >
+                    <X size={12} /> Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  style={{
+                    border: '1.5px solid #e5e7eb',
+                    borderRadius: 999,
+                    padding: '6px 14px',
+                    backgroundColor: colors.white,
+                    color: colors.dark,
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: 'all 150ms ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = colors.orange; e.currentTarget.style.color = colors.orange }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.color = colors.dark }}
+                >
+                  <Edit3 size={12} /> Edit
+                </button>
+              )
+            ) : null}
+          </div>
+
+          {editing ? (
+            <textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              style={{
+                marginTop: 16,
+                width: '100%',
+                minHeight: 420,
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+                color: '#374151',
+                fontSize: 13,
+                lineHeight: 1.65,
+                backgroundColor: '#fafafa',
+                padding: 18,
+                borderRadius: 12,
+                border: `1.5px solid ${colors.orange}`,
+                resize: 'vertical',
+                boxSizing: 'border-box',
+                outline: 'none',
+              }}
+            />
+          ) : (
+            <pre style={{
+              marginTop: 16,
+              whiteSpace: 'pre-wrap',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+              color: '#374151',
+              fontSize: 13,
+              lineHeight: 1.65,
+              maxHeight: 450,
+              overflow: 'auto',
+              backgroundColor: '#fafafa',
+              padding: 18,
+              borderRadius: 12,
+              border: '1px solid #e5e7eb'
+            }}>
+              {currentText || result.documentTextPreview || 'No preview returned by backend.'}
+            </pre>
+          )}
         </div>
 
         <div style={{ ...panelStyle, padding: 24 }}>
@@ -85,6 +223,13 @@ export function OverviewPanel({ result, currentText }: OverviewPanelProps) {
             <InfoLine label="Language" value={result.classification.language} />
             <InfoLine label="Jurisdiction" value={result.classification.jurisdiction} />
             <InfoLine label="Missing protections" value={String(result.missingProtections.length)} />
+            {sessionId ? (
+              <>
+                <InfoLine label="Session" value={sessionId.slice(0, 8) + '…'} />
+                <InfoLine label="Redlines" value={String(redlineCount)} />
+                <InfoLine label="Versions" value={String(versionCount)} />
+              </>
+            ) : null}
           </div>
           {result.warnings.length ? (
             <div style={{ marginTop: 18, padding: 14, borderRadius: 12, backgroundColor: '#fff7ed', border: '1px solid #fed7aa' }}>

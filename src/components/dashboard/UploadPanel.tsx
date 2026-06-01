@@ -123,8 +123,14 @@ export function UploadPanel({ file, error, onFileSelect, onAnalyze }: UploadPane
                 cursor: 'pointer',
                 transition: 'all 150ms ease',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = colors.dark}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = colors.orange
+                e.currentTarget.style.color = colors.orange
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#d1d5db'
+                e.currentTarget.style.color = colors.dark
+              }}
             >
               Choose file
             </button>

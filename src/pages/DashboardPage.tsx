@@ -1,8 +1,8 @@
 import { useState, type CSSProperties } from 'react'
 import { ArrowLeft, Scale } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { analyzeContract, updateSessionText } from '../lib/reviewApi'
-import type { ReviewResult, SuggestionDecision } from '../types/review'
+import { analyzeContract, updateSessionText, fetchSessionData, proposePatch, acceptRedline, rollbackSession } from '../lib/reviewApi'
+import type { ReviewResult, SuggestionDecision, RedlineItem, VersionSnapshot } from '../types/review'
 
 // Import modular components
 import { DashboardTopBar, type StepId } from '../components/dashboard/DashboardTopBar'
@@ -37,18 +37,6 @@ function isAcceptedFile(file: File) {
   const ACCEPTED_EXTENSIONS = ['pdf', 'docx', 'txt']
   const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
   return ACCEPTED_TYPES.includes(file.type) || ACCEPTED_EXTENSIONS.includes(extension)
-}
-
-function applySuggestionToText(currentText: string, originalClause: string, newText: string): string {
-  if (!currentText || !originalClause) return currentText
-  if (currentText.includes(originalClause)) {
-    return currentText.replace(originalClause, newText)
-  }
-  const index = currentText.toLowerCase().indexOf(originalClause.toLowerCase())
-  if (index !== -1) {
-    return currentText.substring(0, index) + newText + currentText.substring(index + originalClause.length)
-  }
-  return currentText
 }
 
 function DashboardHeader({ onBack }: { onBack: () => void }) {
@@ -109,6 +97,8 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedRiskId, setSelectedRiskId] = useState<string | null>(null)
   const [decisions, setDecisions] = useState<Record<number, SuggestionDecision>>({})
+  const [redlines, setRedlines] = useState<RedlineItem[]>([])
+  const [versions, setVersions] = useState<VersionSnapshot[]>([])
 
   const selectFile = (selected: File) => {
     if (!isAcceptedFile(selected)) {
@@ -122,8 +112,28 @@ export function DashboardPage() {
     setCurrentText('')
     setSelectedRiskId(null)
     setDecisions({})
+    setRedlines([])
+    setVersions([])
   }
 
+  // ---------------------------------------------------------------------------
+  // Refresh session state from backend
+  // ---------------------------------------------------------------------------
+  const refreshSession = async () => {
+    if (!sessionId) return
+    try {
+      const session = await fetchSessionData(sessionId)
+      setCurrentText(session.currentText)
+      setRedlines(session.redlines)
+      setVersions(session.versions)
+    } catch (err) {
+      console.error('Failed to refresh session:', err)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Upload + Analyze
+  // ---------------------------------------------------------------------------
   const runAnalyze = async () => {
     if (!file) return
     setError(null)
@@ -137,6 +147,21 @@ export function DashboardPage() {
       setCurrentText(nextResult.documentTextPreview || '')
       setSelectedRiskId(nextResult.risks[0]?.riskId ?? null)
       setDecisions({})
+      setRedlines([])
+      setVersions([])
+
+      // Fetch full session to get redlines/versions
+      if (nextResult.sessionId) {
+        try {
+          const session = await fetchSessionData(nextResult.sessionId)
+          setCurrentText(session.currentText)
+          setRedlines(session.redlines)
+          setVersions(session.versions)
+        } catch {
+          // Session fetch is optional; the analyze response has enough data
+        }
+      }
+
       setActiveStep('overview')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Unable to analyze this document.')
@@ -146,24 +171,86 @@ export function DashboardPage() {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Suggestion Accept/Reject — two-step: propose patch on backend first
+  // ---------------------------------------------------------------------------
   const setSuggestionDecision = async (index: number, decision: SuggestionDecision) => {
     setDecisions((current) => ({ ...current, [index]: decision }))
 
-    if (decision === 'accepted' && result) {
+    if (decision === 'accepted' && result && sessionId) {
       const suggestion = result.suggestions[index]
-      if (suggestion) {
-        const replacementText = suggestion.implementationExample || suggestion.recommendation
-        const newText = applySuggestionToText(currentText, suggestion.relatedClause, replacementText)
-        setCurrentText(newText)
+      if (!suggestion) return
 
-        if (sessionId) {
-          try {
-            await updateSessionText(sessionId, newText)
-          } catch (err) {
-            console.error('Failed to update session text on backend:', err)
-          }
-        }
+      // Determine which anchor to use for the patch
+      const hasAnchor = suggestion.anchorText && suggestion.anchorText !== 'Not available'
+      const hasInsertion = suggestion.insertionAnchor && suggestion.insertionAnchor !== 'Not available'
+      const hasReplacement = suggestion.replacementText && suggestion.replacementText !== 'Not available'
+
+      if (!hasReplacement) {
+        console.warn('Suggestion has no replacement text, skipping patch proposal')
+        return
       }
+
+      try {
+        await proposePatch(sessionId, {
+          anchorText: hasAnchor ? suggestion.anchorText : undefined,
+          insertionAnchor: !hasAnchor && hasInsertion ? suggestion.insertionAnchor : undefined,
+          replacementText: suggestion.replacementText,
+          reason: suggestion.reason || suggestion.recommendation,
+        })
+        // Refresh session to see the new pending redline
+        await refreshSession()
+      } catch (err) {
+        console.error('Failed to propose patch:', err)
+        // Revert the decision on failure
+        setDecisions((current) => {
+          const updated = { ...current }
+          delete updated[index]
+          return updated
+        })
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Accept a pending redline (apply it to the contract)
+  // ---------------------------------------------------------------------------
+  const handleAcceptRedline = async (redlineId: string) => {
+    if (!sessionId) return
+    try {
+      const response = await acceptRedline(sessionId, redlineId)
+      setCurrentText(response.currentText)
+      await refreshSession()
+    } catch (err) {
+      console.error('Failed to accept redline:', err)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rollback to previous version
+  // ---------------------------------------------------------------------------
+  const handleRollback = async () => {
+    if (!sessionId) return
+    try {
+      const response = await rollbackSession(sessionId)
+      setCurrentText(response.currentText)
+      await refreshSession()
+    } catch (err) {
+      console.error('Failed to rollback:', err)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Manual text update from OverviewPanel edit mode
+  // ---------------------------------------------------------------------------
+  const handleTextUpdate = async (newText: string) => {
+    if (!sessionId) return
+    try {
+      await updateSessionText(sessionId, newText)
+      setCurrentText(newText)
+      await refreshSession()
+    } catch (err) {
+      console.error('Failed to update text:', err)
     }
   }
 
@@ -189,11 +276,34 @@ export function DashboardPage() {
     }
 
     // Render active panel
-    if (activeStep === 'overview') return <OverviewPanel result={result} currentText={currentText} />
+    if (activeStep === 'overview') {
+      return (
+        <OverviewPanel
+          result={result}
+          currentText={currentText}
+          sessionId={sessionId}
+          redlineCount={redlines.length}
+          versionCount={versions.length}
+          onTextUpdate={handleTextUpdate}
+        />
+      )
+    }
     if (activeStep === 'summary') return <SummaryPanel result={result} />
     if (activeStep === 'risks') return <RisksPanel result={result} selectedRiskId={selectedRiskId} onSelectRisk={setSelectedRiskId} />
-    if (activeStep === 'redline') return <RedlinePanel result={result} decisions={decisions} onDecision={setSuggestionDecision} />
-    return <ExportPanel result={result} decisions={decisions} currentText={currentText} />
+    if (activeStep === 'redline') {
+      return (
+        <RedlinePanel
+          result={result}
+          decisions={decisions}
+          onDecision={setSuggestionDecision}
+          redlines={redlines}
+          versions={versions}
+          onAcceptRedline={handleAcceptRedline}
+          onRollback={handleRollback}
+        />
+      )
+    }
+    return <ExportPanel result={result} decisions={decisions} currentText={currentText} redlines={redlines} />
   }
 
   return (
@@ -211,9 +321,7 @@ export function DashboardPage() {
           .upload-grid,
           .overview-grid,
           .risks-grid,
-          .export-grid {
-            grid-template-columns: 1fr !important;
-          }
+          .export-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 820px) {
           .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }

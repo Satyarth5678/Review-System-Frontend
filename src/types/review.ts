@@ -36,6 +36,35 @@ export interface SuggestionItem {
   recommendation: string
   reason: string
   implementationExample: string
+  riskId: string
+  anchorText: string
+  insertionAnchor: string
+  replacementText: string
+}
+
+export interface RedlineItem {
+  redlineId: string
+  originalText: string
+  replacementText: string
+  startPosition: number
+  endPosition: number
+  reason: string
+  status: 'pending' | 'accepted' | string
+}
+
+export interface VersionSnapshot {
+  timestamp: string
+  text: string
+  redlines: RedlineItem[]
+}
+
+export interface SessionData {
+  sessionId: string
+  originalText: string
+  currentText: string
+  analysis: Record<string, unknown>
+  redlines: RedlineItem[]
+  versions: VersionSnapshot[]
 }
 
 export interface ReviewResult {

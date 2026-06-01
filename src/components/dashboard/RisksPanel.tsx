@@ -55,6 +55,18 @@ function PillButton({
         transition: 'all 200ms ease',
         whiteSpace: 'nowrap',
       }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.borderColor = colors.orange
+          e.currentTarget.style.color = colors.orange
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.borderColor = colors.line
+          e.currentTarget.style.color = colors.dark
+        }
+      }}
     >
       {children}
     </button>
